@@ -34,6 +34,7 @@ enum TYPES {
 	FLOAT, VALFLOAT,
 	INTEGER, VALINT,
 	INVALID,
+	COMMENT, STBLKCOMMENT, EDBLKCOMMENT,
 	FILEEND
 };
 
@@ -483,14 +484,40 @@ token Scanner (FILE* stream) {
 		tempToken.t_type = SUB;
 	}
 
-	// *
+	// * or */
 	else if (currentChar == '*') {
-		tempToken.t_type = MULT;
+		tempToken.t_string += currentChar;
+
+		int nextChar;
+
+		nextChar = getc(stream);
+
+		if (nextChar == '/') {
+			tempToken.t_type = EDBLKCOMMENT;
+		}
+		else {
+			tempToken.t_type = MULT;
+		}
 	}
 
-	// /
+	// /, // or /*
 	else if (currentChar == '/') {
-		tempToken.t_type = DIVIDE;
+
+		tempToken.t_string += currentChar;
+
+		int nextChar;
+
+		nextChar = getc(stream);
+
+		if (nextChar == '/') {
+			tempToken.t_type = COMMENT;
+		}
+		else if (nextChar == '*') {
+			tempToken.t_type = STBLKCOMMENT;
+		}
+		else {
+			tempToken.t_type = DIVIDE;
+		}
 	}
 
 	// Invalid
