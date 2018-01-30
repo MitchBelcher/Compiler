@@ -320,11 +320,40 @@ token Scanner (FILE* stream) {
 
 		nextChar = getc(stream); // Get the next character
 
-		if (nextChar == '_') {
+		while (isdigit(nextChar) || nextChar == '_') {
+
+			if (nextChar != '_') {
+				tempToken.t_string += nextChar;
+			}
+			
 			nextChar = getc(stream);
 		}
 
+		if (nextChar == '.') {
 
+			tempToken.t_string += nextChar;
+
+			nextChar = getc(stream);
+
+			while (isdigit(nextChar) || nextChar == '_') {
+
+				if (nextChar != '_') {
+					tempToken.t_string += nextChar;
+				}
+
+				nextChar = getc(stream);
+			}
+
+			ungetc(nextChar, stream);
+			tempToken.t_type = VALFLOAT;
+			tempToken.t_float = atof(tempToken.t_string.c_str());
+		}
+
+		else {
+			ungetc(nextChar, stream);
+			tempToken.t_type = VALINT;
+			tempToken.t_int = atoi(tempToken.t_string.c_str());
+		}
 
 	}
 
@@ -467,6 +496,7 @@ token Scanner (FILE* stream) {
 	// Invalid
 	else {
 		tempToken.t_type = INVALID;
+		tempToken.t_char = currentChar;
 	}
 
 	return tempToken;
