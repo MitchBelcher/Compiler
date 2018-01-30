@@ -238,7 +238,6 @@ token Scanner (FILE* stream) {
 	}
 
 	// Identifiers, reserve words or true/false
-	// Where do string/number/char go?  Different else if?
 	else if (isalpha(currentChar)) {
 
 		isReserve = false;
@@ -274,15 +273,59 @@ token Scanner (FILE* stream) {
 		int nextChar; // create a variable for next character
 		nextChar = getc(stream); // Get the next character
 
-		if (isalpha(nextChar) || isdigit(nextChar) || nextChar == '_' || nextChar == ';' || nextChar == ':' || nextChar == '.' || nextChar == 34) {
+		if (isalpha(nextChar) || isdigit(nextChar) || nextChar == '_' || nextChar == ';' || nextChar == ':' || nextChar == '.' || nextChar == '"' || nextChar == ' ') {
 			tempToken.t_char = nextChar;
-			tempToken.t_type = VALCHAR;
 			nextChar = getc(stream);
+		}
+
+		if (nextChar == 39) {
+			tempToken.t_type = VALCHAR;
 		}
 
 		else {
 			tempToken.t_type = INVALID;
 		}
+	}
+
+	// Strings
+	else if (currentChar == '"') {
+
+		tempToken.t_string += currentChar; // set up token string
+
+		int nextChar; // create a variable for next character
+
+		nextChar = getc(stream); // Get the next character
+
+		// Continue grabbing the next character and append it to the string
+		while (isalpha(nextChar) || isdigit(nextChar) || nextChar == '_' || nextChar == ';' || nextChar == ':' || nextChar == '.' || nextChar == ',' || nextChar == 39 || nextChar == ' ') {
+			tempToken.t_string += nextChar;
+			nextChar = getc(stream);
+		}
+		
+		if (nextChar == '"') {
+			tempToken.t_type = VALSTRING;
+		}
+		else {
+			tempToken.t_type = INVALID;
+		}
+
+	}
+
+	// Numbers (int or float)
+	else if (isdigit(currentChar)) {
+
+		tempToken.t_string += currentChar; // set up token string
+
+		int nextChar; // create a variable for next character
+
+		nextChar = getc(stream); // Get the next character
+
+		if (nextChar == '_') {
+			nextChar = getc(stream);
+		}
+
+
+
 	}
 
 	// And
