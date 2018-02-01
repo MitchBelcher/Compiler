@@ -5,9 +5,7 @@ program test_program is
 		char z := '.';
 		string yah := "this is my string";
         integer b;
-		/*
 		// handsoap
-		*/
     begin
         b := 3;
         y := b;
