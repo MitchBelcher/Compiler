@@ -15,10 +15,10 @@ private:
 	void Program();
 	void ProgramHead();
 	void ProgramBody();
-	void Declar();
+	void Declare();
 	void Statement();
-	void ProcDeclar();
-	void VarDeclar();
+	void ProcDeclare();
+	void VarDeclare();
 	void ProcHead();
 	void ProcBody();
 	void ParamList();
