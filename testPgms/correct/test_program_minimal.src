@@ -1,0 +1,21 @@
+program test_program is
+    integer a;
+	float w;
+    procedure f (integer x in, integer y out)
+		char z := '.';
+		string yah := "this is my string";
+        integer b;
+		/*
+		// handsoap
+		*/
+    begin
+        b := 3;
+        y := b;
+		w := 9._
+    end procedure;
+begin
+    a := 3;
+    f(3, a);
+    putInteger(a);
+    
+end program .
