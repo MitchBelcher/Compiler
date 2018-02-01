@@ -82,16 +82,16 @@ void Scanner::checkForReserves(token &tempToken) {
 		}
 }
 
-token Scanner::tokenScan(FILE* stream) {
+token Scanner::tokenScan() {
 
 	token tempToken;
 	int currentChar;
 
-	currentChar = getc(stream);
+	currentChar = getc(tempStream);
 
 	// Check for whitespace
 	while (isspace(currentChar)) {
-		currentChar = getc(stream);
+		currentChar = getc(tempStream);
 	}
 
 	// Parentheses begin
@@ -120,14 +120,14 @@ token Scanner::tokenScan(FILE* stream) {
 		tempToken.t_string = tolower(currentChar);
 
 		int nextChar; // create a variable for next character
-		nextChar = getc(stream); // Get the next character
+		nextChar = getc(tempStream); // Get the next character
 
 		// If the next character is alpha, digit or _, continue grabbing the next character and append it to the string
 		while (isalpha(nextChar) || isdigit(nextChar) || nextChar == '_') {
 			tempToken.t_string += tolower(nextChar);
-			nextChar = getc(stream);
+			nextChar = getc(tempStream);
 		}
-		ungetc(nextChar, stream); // Put invalid character back on the stream
+		ungetc(nextChar, tempStream); // Put invalid character back on the tempStream
 
 		checkForReserves(tempToken);
 	}
@@ -136,11 +136,11 @@ token Scanner::tokenScan(FILE* stream) {
 	else if (currentChar == 39) {
 
 		int nextChar; // create a variable for next character
-		nextChar = getc(stream); // Get the next character
+		nextChar = getc(tempStream); // Get the next character
 
 		if (isalpha(nextChar) || isdigit(nextChar) || nextChar == '_' || nextChar == ';' || nextChar == ':' || nextChar == '.' || nextChar == '"' || nextChar == ' ') {
 			tempToken.t_char = nextChar;
-			nextChar = getc(stream);
+			nextChar = getc(tempStream);
 		}
 
 		if (nextChar == 39) {
@@ -158,12 +158,12 @@ token Scanner::tokenScan(FILE* stream) {
 		tempToken.t_string += currentChar; // set up token string
 
 		int nextChar; // create a variable for next character
-		nextChar = getc(stream); // Get the next character
+		nextChar = getc(tempStream); // Get the next character
 
 		// Continue grabbing the next character and append it to the string
 		while (isalpha(nextChar) || isdigit(nextChar) || nextChar == '_' || nextChar == ';' || nextChar == ':' || nextChar == '.' || nextChar == ',' || nextChar == 39 || nextChar == ' ') {
 			tempToken.t_string += nextChar;
-			nextChar = getc(stream);
+			nextChar = getc(tempStream);
 		}
 
 		if (nextChar == '"') {
@@ -181,7 +181,7 @@ token Scanner::tokenScan(FILE* stream) {
 		tempToken.t_string += currentChar; // set up token string
 
 		int nextChar; // create a variable for next character
-		nextChar = getc(stream); // Get the next character
+		nextChar = getc(tempStream); // Get the next character
 
 		while (isdigit(nextChar) || nextChar == '_') {
 
@@ -189,14 +189,14 @@ token Scanner::tokenScan(FILE* stream) {
 				tempToken.t_string += nextChar;
 			}
 
-			nextChar = getc(stream);
+			nextChar = getc(tempStream);
 		}
 
 		if (nextChar == '.') {
 
 			tempToken.t_string += nextChar;
 
-			nextChar = getc(stream);
+			nextChar = getc(tempStream);
 
 			while (isdigit(nextChar) || nextChar == '_') {
 
@@ -204,16 +204,16 @@ token Scanner::tokenScan(FILE* stream) {
 					tempToken.t_string += nextChar;
 				}
 
-				nextChar = getc(stream);
+				nextChar = getc(tempStream);
 			}
 
-			ungetc(nextChar, stream);
+			ungetc(nextChar, tempStream);
 			tempToken.t_type = VALFLOAT;
 			tempToken.t_float = atof(tempToken.t_string.c_str());
 		}
 
 		else {
-			ungetc(nextChar, stream);
+			ungetc(nextChar, tempStream);
 			tempToken.t_type = VALINT;
 			tempToken.t_int = atoi(tempToken.t_string.c_str());
 		}
@@ -251,7 +251,7 @@ token Scanner::tokenScan(FILE* stream) {
 
 		int nextChar;
 
-		nextChar = getc(stream);
+		nextChar = getc(tempStream);
 
 		if (nextChar = '=') {
 			tempToken.t_type = SEMIEQUAL;
@@ -259,7 +259,7 @@ token Scanner::tokenScan(FILE* stream) {
 
 		else {
 			tempToken.t_type = COLON;
-			ungetc(nextChar, stream);
+			ungetc(nextChar, tempStream);
 		}
 	}
 
@@ -281,14 +281,14 @@ token Scanner::tokenScan(FILE* stream) {
 		tempToken.t_string += currentChar;
 
 		int nextChar;
-		nextChar = getc(stream);
+		nextChar = getc(tempStream);
 
 		if (nextChar == '=') {
 			tempToken.t_type = DOUBLEEQUAL;
 		}
 		else {
 			tempToken.t_type = EQUALS;
-			ungetc(nextChar, stream);
+			ungetc(nextChar, tempStream);
 		}
 	}
 
@@ -298,14 +298,14 @@ token Scanner::tokenScan(FILE* stream) {
 		tempToken.t_string += currentChar;
 
 		int nextChar;
-		nextChar = getc(stream);
+		nextChar = getc(tempStream);
 
 		if (nextChar == '=') {
 			tempToken.t_type = LESSEQ;
 		}
 		else {
 			tempToken.t_type = LESS;
-			ungetc(nextChar, stream);
+			ungetc(nextChar, tempStream);
 		}
 	}
 
@@ -315,14 +315,14 @@ token Scanner::tokenScan(FILE* stream) {
 		tempToken.t_string += currentChar;
 
 		int nextChar;
-		nextChar = getc(stream);
+		nextChar = getc(tempStream);
 
 		if (nextChar == '=') {
 			tempToken.t_type = GREATEQ;
 		}
 		else {
 			tempToken.t_type = GREAT;
-			ungetc(nextChar, stream);
+			ungetc(nextChar, tempStream);
 		}
 	}
 
@@ -332,14 +332,14 @@ token Scanner::tokenScan(FILE* stream) {
 		tempToken.t_string += currentChar;
 
 		int nextChar;
-		nextChar = getc(stream);
+		nextChar = getc(tempStream);
 
 		if (nextChar == '=') {
 			tempToken.t_type = NOTEQUAL;
 		}
 		else {
 			tempToken.t_type = INVALID;
-			ungetc(nextChar, stream);
+			ungetc(nextChar, tempStream);
 		}
 	}
 
@@ -360,7 +360,7 @@ token Scanner::tokenScan(FILE* stream) {
 		tempToken.t_string += currentChar;
 
 		int nextChar;
-		nextChar = getc(stream);
+		nextChar = getc(tempStream);
 
 		if (nextChar == '/') {
 			//////////////////////////////////////////
@@ -380,16 +380,16 @@ token Scanner::tokenScan(FILE* stream) {
 		tempToken.t_string += currentChar;
 
 		int nextChar;
-		nextChar = getc(stream);
+		nextChar = getc(tempStream);
 
 		if (nextChar == '/') {
 
 			while (nextChar != '\n') {
 				tempToken.t_string += nextChar;
-				nextChar = getc(stream);
+				nextChar = getc(tempStream);
 			}
 
-			ungetc(nextChar, stream);
+			ungetc(nextChar, tempStream);
 
 			tempToken.t_type = COMMENT;
 		}
@@ -404,7 +404,7 @@ token Scanner::tokenScan(FILE* stream) {
 		else {
 			tempToken.t_type = DIVIDE;
 			tempToken.t_char = currentChar;
-			ungetc(nextChar, stream);
+			ungetc(nextChar, tempStream);
 		}
 	}
 
@@ -418,22 +418,27 @@ token Scanner::tokenScan(FILE* stream) {
 
 }
 
-void Scanner::scanIn(const char* filePath) {
+void Scanner::init(const char* filePath) {
 
 	errno_t error = fopen_s(&tempStream, filePath, "r"); // Open read-only filestream with specified file path
 
-	 // Error in open
+	// Error in open
 	if (error != 0) {
 		// File cannot be read
 	}
+}
 
-	token firstToken = tokenScan(tempStream);
-
-	while (firstToken.t_type != FILEEND) {
-		tempTokenList.push_back(firstToken);
-		firstToken = tokenScan(tempStream);
-	}
-	tempTokenList.push_back(firstToken);
-
+Scanner::~Scanner() {
 	fclose(tempStream);
 }
+
+//void Scanner::scanIn(const char* filePath) {
+//
+//	token firstToken = tokenScan(tempStream);
+//
+//	while (firstToken.t_type != FILEEND) {
+//		tempTokenList.push_back(firstToken);
+//		firstToken = tokenScan(tempStream);
+//	}
+//	tempTokenList.push_back(firstToken);
+//}

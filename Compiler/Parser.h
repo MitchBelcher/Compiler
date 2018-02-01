@@ -13,26 +13,26 @@ private:
 	token tempToken;
 
 	void Program();
-	void Program_Head();
-	void Program_Body();
+	void ProgramHead();
+	void ProgramBody();
 	void Declar();
 	void Statement();
-	void Proc_Declar();
-	void Var_Declar();
-	void Proc_Head();
-	void Proc_Body();
-	void Param_List();
+	void ProcDeclar();
+	void VarDeclar();
+	void ProcHead();
+	void ProcBody();
+	void ParamList();
 	void Param();
-	void Type_Mark();
+	void TypeMark();
 
 	void Expr();
-	void Expr_Prime();
+	void ExprPrime();
 	void Arith();
-	void Arith_Prime();
+	void ArithPrime();
 	void Relat();
-	void Relat_Prime();
+	void RelatPrime();
 	void Term();
-	void Term_Prime();
+	void TermPrime();
 	void Factor();
 	void Name();
 	void Number();

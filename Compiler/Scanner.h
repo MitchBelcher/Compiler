@@ -6,12 +6,16 @@
 
 class Scanner {
 public:
-	void scanIn (const char* filePath);
+	void init (const char* filePath);
+	~Scanner();
+
+	//void scanIn (const char* filePath);
+	token tokenScan ();
 	vector<token> getTokens();
 
 private:
 	void checkForReserves (token &tempToken);
-	token tokenScan (FILE* stream);
+	//token tokenScan (FILE* stream);
 	vector<token> tempTokenList;
 	FILE* tempStream;
 };

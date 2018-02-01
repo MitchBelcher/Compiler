@@ -12,7 +12,7 @@ int main(int argc, char *argv[]) {
 	const char* filePath = "C://Users//guita//Documents//Compiler//testPgms//correct//test_program_minimal.src"; // filepath to read
 
 	Scanner inputScanner;
-	inputScanner.scanIn(filePath);
+	//inputScanner.scanIn(filePath);
 
 	vector<token> tokens = inputScanner.getTokens();
 
