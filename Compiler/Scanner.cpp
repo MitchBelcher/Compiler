@@ -1,12 +1,20 @@
+/*
+
+This cpp file contains the definitions for Scanner class functions, like initialization/construction and scanning to create tokens
+
+*/
+
 #include "Scanner.h"
 
 #include <string>
 #include <stdio.h>
 
+// Simple function to return a list of tokens
 vector<token> Scanner::getTokens() {
 	return tempTokenList;
 }
 
+// Function to check if input reference token is one of a number of reserve words versus a simple identifier
 void Scanner::checkForReserves(token &tempToken) {
 
 		if (tempToken.t_string.compare("program") == 0) {
@@ -80,18 +88,29 @@ void Scanner::checkForReserves(token &tempToken) {
 		if (tempToken.t_string.compare("integer") == 0) {
 			tempToken.t_type = INTEGER;
 		}
+
+		if (tempToken.t_string.compare("true") == 0) {
+			tempToken.t_type = TRUE;
+			tempToken.t_bool = true;
+		}
+
+		if (tempToken.t_string.compare("false") == 0) {
+			tempToken.t_type = FALSE;
+			tempToken.t_bool = false;
+		}
 }
 
+// Function to systematically scan characters to create a final token
 token Scanner::tokenScan() {
 
-	token tempToken;
-	int currentChar;
+	token tempToken; // Create temporary token for scanning
 
-	currentChar = getc(tempStream);
+	int currentChar; // Create a placeholder for the current character
+	currentChar = getc(tempStream); // Get the current character from the stream
 
 	// Check for whitespace
 	while (isspace(currentChar)) {
-		currentChar = getc(tempStream);
+		currentChar = getc(tempStream); // If whitespace, move to next character
 	}
 
 	// Parentheses begin
@@ -116,37 +135,40 @@ token Scanner::tokenScan() {
 	// Identifiers, reserve words or true/false
 	else if (isalpha(currentChar)) {
 
-		tempToken.t_type = IDENTIFIER;
-		tempToken.t_string = tolower(currentChar);
+		tempToken.t_type = IDENTIFIER; // Assume the token is a identifier
+		tempToken.t_string = tolower(currentChar); // Add the current token to the string (lowercase)
 
-		int nextChar; // create a variable for next character
-		nextChar = getc(tempStream); // Get the next character
+		int nextChar; // Create a placeholder for the next character
+		nextChar = getc(tempStream); // Get the next character from the stream
 
-		// If the next character is alpha, digit or _, continue grabbing the next character and append it to the string
+		// If the next character is alpha, digit or _, continue grabbing the next character and append it to the string (lowercase)
 		while (isalpha(nextChar) || isdigit(nextChar) || nextChar == '_') {
-			tempToken.t_string += tolower(nextChar);
-			nextChar = getc(tempStream);
+			tempToken.t_string += tolower(nextChar); // Append lowercase to token string
+			nextChar = getc(tempStream); // Get the next character from the stream
 		}
 		ungetc(nextChar, tempStream); // Put invalid character back on the tempStream
 
-		checkForReserves(tempToken);
+		checkForReserves(tempToken); // Check to see if the token was a reserve word, if it wasn't no change is made
 	}
 
-	// Chars
+	// Characters
 	else if (currentChar == 39) {
 
-		int nextChar; // create a variable for next character
-		nextChar = getc(tempStream); // Get the next character
+		int nextChar; // Create a placeholder for the next character
+		nextChar = getc(tempStream); // Get the next character from the stream
 
+		// If the next character is any of the allowed characters, add it to the tokens char value, and move to the next character
 		if (isalpha(nextChar) || isdigit(nextChar) || nextChar == '_' || nextChar == ';' || nextChar == ':' || nextChar == '.' || nextChar == '"' || nextChar == ' ') {
-			tempToken.t_char = nextChar;
-			nextChar = getc(tempStream);
+			tempToken.t_char = nextChar; // Set the tokens char to the character we found
+			nextChar = getc(tempStream); // Get the next character from the stream
 		}
 
+		// Ensure the next char is a ' to signal the end of the character definition
 		if (nextChar == 39) {
 			tempToken.t_type = VALCHAR;
 		}
 
+		// The next char did not signal the end of the character definition, the token violates language rules
 		else {
 			tempToken.t_type = INVALID;
 		}
@@ -155,20 +177,23 @@ token Scanner::tokenScan() {
 	// Strings
 	else if (currentChar == '"') {
 
-		tempToken.t_string += currentChar; // set up token string
+		//tempToken.t_string += currentChar; // set up token string
 
-		int nextChar; // create a variable for next character
-		nextChar = getc(tempStream); // Get the next character
+		int nextChar; // Create a placeholder for the next character
+		nextChar = getc(tempStream); // Get the next character from the stream
 
-		// Continue grabbing the next character and append it to the string
+		// If the next character is any valid string character, continue grabbing the next character and append it to the string
 		while (isalpha(nextChar) || isdigit(nextChar) || nextChar == '_' || nextChar == ';' || nextChar == ':' || nextChar == '.' || nextChar == ',' || nextChar == 39 || nextChar == ' ') {
-			tempToken.t_string += nextChar;
-			nextChar = getc(tempStream);
+			tempToken.t_string += nextChar; // Append character to the token string 
+			nextChar = getc(tempStream); // Get the next character from the stream
 		}
 
+		// Ensure the next char is a " to signal the end of the string definition
 		if (nextChar == '"') {
 			tempToken.t_type = VALSTRING;
 		}
+
+		// The next char did not signal the end of the string definition, the token violates language rules
 		else {
 			tempToken.t_type = INVALID;
 		}
@@ -178,44 +203,50 @@ token Scanner::tokenScan() {
 	// Numbers (int or float)
 	else if (isdigit(currentChar)) {
 
-		tempToken.t_string += currentChar; // set up token string
+		tempToken.t_string += currentChar; // Append first digit char to token string
 
-		int nextChar; // create a variable for next character
-		nextChar = getc(tempStream); // Get the next character
+		int nextChar; // Create a placeholder for the next character
+		nextChar = getc(tempStream); // Get the next character from the stream
 
+		// If next char is a digit or underscore, continue grabbing the next character and append it to the string
 		while (isdigit(nextChar) || nextChar == '_') {
 
+			// If the char is an underscore, fold it
 			if (nextChar != '_') {
 				tempToken.t_string += nextChar;
 			}
 
-			nextChar = getc(tempStream);
+			nextChar = getc(tempStream); // Get the next character from the stream
 		}
 
+		// If the next char is a ., start processing it as a float value
 		if (nextChar == '.') {
 
-			tempToken.t_string += nextChar;
+			tempToken.t_string += nextChar; // Append first decimal digit to the token string
 
-			nextChar = getc(tempStream);
+			nextChar = getc(tempStream); // Get the next character from the stream
 
+			// If next char is a digit or underscore, continue grabbing the next character and append it to the string
 			while (isdigit(nextChar) || nextChar == '_') {
 
+				// If the char is an underscore, fold it
 				if (nextChar != '_') {
 					tempToken.t_string += nextChar;
 				}
 
-				nextChar = getc(tempStream);
+				nextChar = getc(tempStream);// Get the next character from the stream
 			}
 
-			ungetc(nextChar, tempStream);
-			tempToken.t_type = VALFLOAT;
-			tempToken.t_float = atof(tempToken.t_string.c_str());
+			ungetc(nextChar, tempStream); // Put invalid character back on the temp stream
+			tempToken.t_type = VALFLOAT; // Set token type to float, since we found a .
+			tempToken.t_float = atof(tempToken.t_string.c_str()); // Convert to float, and save in token float element
 		}
 
+		// Never found a ., value is an integer, and has ended
 		else {
-			ungetc(nextChar, tempStream);
-			tempToken.t_type = VALINT;
-			tempToken.t_int = atoi(tempToken.t_string.c_str());
+			ungetc(nextChar, tempStream); // Put invalid character back on the temp stream
+			tempToken.t_type = VALINT; // Set token type to int, since we never found a .
+			tempToken.t_int = atoi(tempToken.t_string.c_str()); // Convert to integer, and save in token integer element
 		}
 
 	}
@@ -408,16 +439,17 @@ token Scanner::tokenScan() {
 		}
 	}
 
-	// Invalid
+	// Invalid char
 	else {
 		tempToken.t_type = INVALID;
 		tempToken.t_char = currentChar;
 	}
 
-	return tempToken;
+	return tempToken; // Return the token we have scanned
 
 }
 
+// Scanner initialization constructor, takes a filepath, and opens the stream for that path
 void Scanner::init(const char* filePath) {
 
 	errno_t error = fopen_s(&tempStream, filePath, "r"); // Open read-only filestream with specified file path
@@ -428,10 +460,12 @@ void Scanner::init(const char* filePath) {
 	}
 }
 
+// Scanner deconstructor, closes the stream
 Scanner::~Scanner() {
 	fclose(tempStream);
 }
 
+// Function to scan in each token until the end of file was reached
 //void Scanner::scanIn(const char* filePath) {
 //
 //	token firstToken = tokenScan(tempStream);

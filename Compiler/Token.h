@@ -1,3 +1,10 @@
+/*
+
+This header file contains the enumerators to classify all reserve words, types, and other important identification tags for a given token
+As well as the base token structure that contains the elements that make up a token
+
+*/
+
 #pragma once
 
 #include <string>

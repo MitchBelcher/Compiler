@@ -1,3 +1,10 @@
+/*
+
+This header file contains the base Parser class that holds a constructor, a function to parse through the file,
+An instance of Scanner, a temporary token for parsing, as well as declarations for all parsing function steps
+
+*/
+
 #pragma once
 
 #include "Scanner.h"
@@ -24,6 +31,11 @@ private:
 	void ParamList();
 	void Param();
 	void TypeMark();
+	void Assign();
+	void If();
+	void Loop();
+	void Return();
+	void ProcCall();
 
 	void Expr();
 	void ExprPrime();
