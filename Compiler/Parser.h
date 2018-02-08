@@ -35,7 +35,8 @@ private:
 	void If();
 	void Loop();
 	void Return();
-	void ProcCall();
+	void AssignState();
+	void ArgumentList();
 
 	void Expr();
 	void ExprPrime();

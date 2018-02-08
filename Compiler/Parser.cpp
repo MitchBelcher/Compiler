@@ -129,9 +129,7 @@ void Parser::Statement() {
 
 	// Assign statement/Procedure 
 	if (tempToken.t_type == IDENTIFIER) {
-		/////////////////////////////////
-		// TODO /////////////////////////
-		/////////////////////////////////
+		Assign(); // Run assign procedure
 	}
 
 	// If conditional start
@@ -320,21 +318,206 @@ void Parser::TypeMark() {
 // Assign
 void Parser::Assign() {
 
+	// Check for IDENTIFIER
+	if (tempToken.t_type == IDENTIFIER) {
+		Ident(); // Run identifier procedure
+
+		// Check for left bracket
+		if (tempToken.t_type == BRACKBEGIN) {
+			tempToken = inputScanner.tokenScan(); // Get next token, ADDED LEFT BRACKET TO TREE
+			Expr(); // Run expression procedure
+
+			// Check for right bracket
+			if (tempToken.t_type == BRACKEND) {
+				tempToken = inputScanner.tokenScan(); // Get next token, ADDED RIGHT BRACKET TO TREE
+				AssignState(); // Run statement assignment procedure
+			}
+			else {
+				// ERROR, VIOLATION IN IDENTIFIER ASSIGNMENT
+			}
+		}
+
+		// Check for left parentheses
+		else if (tempToken.t_type == PARENBEGIN) {
+			tempToken = inputScanner.tokenScan(); // Get next token, ADDED LEFT PARENTHESES TO TREE
+			ArgumentList(); // Run argument list procedure
+
+			// Check for right parenthese
+			if (tempToken.t_type == PARENEND) {
+				tempToken = inputScanner.tokenScan(); // Get next token, ADDED RIGHT PARENTHESES TO TREE
+			}
+		}
+		else {
+			AssignState(); // Run statement assignment procedure
+		}
+	}
+}
+
+// Statement Assignment
+void Parser::AssignState() {
+
+	// Check for EQUALS
+	if (tempToken.t_type == SEMIEQUAL) {
+		tempToken = inputScanner.tokenScan(); // Get next token, ADDED EQUALS TO TREE
+		Expr(); // Run expression procdeure
+	}
+	else {
+		// ERROR, NO EQUALS IN ASSIGNMENT
+	}
+}
+
+// Argument List
+void Parser::ArgumentList() {
+	Expr(); // Run expression procedure
+
+	// Check for COMMA
+	if (tempToken.t_type == COMMA) {
+		tempToken = inputScanner.tokenScan(); // Get next token, ADDED COMMA TO TREE
+		ArgumentList(); // Run argument list procedure
+	}
 }
 
 // If
 void Parser::If() {
 
+	// Check for IF
+	if (tempToken.t_type == IF) {
+		tempToken = inputScanner.tokenScan(); // Get next token, ADDED IF TO TREE
+
+		// Check for left parentheses
+		if (tempToken.t_type == PARENBEGIN) {
+			tempToken = inputScanner.tokenScan(); // Get next token, ADDED LEFT PARENTHESES TO TREE
+			Expr(); // Run expression procedure
+
+			// Check for right parentheses
+			if (tempToken.t_type == PARENEND) {
+				tempToken = inputScanner.tokenScan(); // Get next token, ADDED RIGHT PARENTHESES TO TREE
+
+				// Check for THEN
+				if (tempToken.t_type == THEN) {
+					tempToken = inputScanner.tokenScan(); // Get next token, ADDED THEN TO TREE
+					Statement(); // Run statement procedure
+
+					// Check for SEMICOLON
+					if (tempToken.t_type == SEMICOLON) {
+						tempToken = inputScanner.tokenScan(); // Get next token, ADDED SEMICOLON TO TREE
+					}
+					else {
+						// ERROR, NO SEMICOLON IN STATEMENT
+					}
+
+					// Check for IDENTIFIER, IF, FOR, or RETURN
+					while (tempToken.t_type == IDENTIFIER || tempToken.t_type == IF || tempToken.t_type == FOR || tempToken.t_type == RETURN) {
+						Statement(); // Run statement procedure
+
+						// Check for SEMICOLON
+						if (tempToken.t_type == SEMICOLON) {
+							tempToken = inputScanner.tokenScan(); // Get next token, ADDED SEMICOLON TO TREE
+						}
+						else {
+							// ERROR, NO SEMICOLON IN STATEMENT
+						}
+					}
+
+					// Check for ELSE
+					if (tempToken.t_type == ELSE) {
+						tempToken = inputScanner.tokenScan(); // Get next token, ADDED ELSE TO TREE
+						Statement(); // Run statement procedure
+
+						// Check for SEMICOLON
+						if (tempToken.t_type == SEMICOLON) {
+							tempToken = inputScanner.tokenScan(); // Get next token, ADDED SEMICOLON TO TREE
+						}
+						else {
+							// ERROR, NO SEMICOLON IN STATEMENT
+						}
+
+						// Check for IDENTIFIER, IF, FOR, RETURN
+						while (tempToken.t_type == IDENTIFIER || tempToken.t_type == IF || tempToken.t_type == FOR || tempToken.t_type == RETURN) {
+							Statement(); // Run statement procedure
+
+							// Check for SEMICOLON
+							if (tempToken.t_type == SEMICOLON) {
+								tempToken = inputScanner.tokenScan(); // Get next token, ADDED SEMICOLON TO TREE
+							}
+							else {
+								// ERROR, NO SEMICOLON IN STATEMENT
+							}
+						}
+					}
+
+					// Check for END
+					if (tempToken.t_type == END) {
+						tempToken = inputScanner.tokenScan(); // Get next token, ADDED END TO TREE
+
+						// Check for IF
+						if (tempToken.t_type == IF) {
+							tempToken = inputScanner.tokenScan(); // Get next token, ADDED IF TO TREE
+						}
+						else {
+							// ERROR, NO IF FOUND IN END IF
+						}
+					}
+					else {
+						// ERROR, NO END FOUND AFTER IF STATEMENT
+					}
+				}
+				else {
+					// ERROR, NO THEN FOUND AFTER IF STATEMENT
+				}
+			}
+			else {
+				// ERROR, MISSING RIGHT PARENTHESES AFTER IF STATEMENT CONDITION
+			}
+		}
+		else {
+			// ERROR, MISSING LEFT PARENTHESE AFTER IF STATEMENT FOR CONDITION
+		}
+	}
+	else {
+		// ERROR, MISSING IF
+	}
 }
 
 // Loop
 void Parser::Loop() {
 
+	// Check for FOR
+	if (tempToken.t_type == FOR) {
+		tempToken = inputScanner.tokenScan(); // Get next token, ADDED FOR TO TREE
+
+		// Check for left parentheses
+		if (tempToken.t_type == PARENBEGIN) {
+			tempToken = inputScanner.tokenScan(); // Get next token, ADDED LEFT PARENTHESES TO TREE
+			AssignState(); // Run statement assignment
+
+			// Check for SEMICOLON
+			if (tempToken.t_type == SEMICOLON) {
+				tempToken = inputScanner.tokenScan(); // Get next token, ADDED SEMICOLON TO TREE
+			}
+			else {
+				// ERROR, MISSING SEMICOLON IN FOR STATEMENT
+			}
+			Expr(); // Run expression procedure
+
+			// Check for right parentheses
+			if (tempToken.t_type == PARENEND) {
+				tempToken = inputScanner.tokenScan(); // Get next token, ADDED RIGHT PARENTHESES TO TREE
+			}
+		}
+	}
 }
 
 // Return
 void Parser::Return() {
 
+	// Check for RETURN
+	if (tempToken.t_type == RETURN) {
+		tempToken = inputScanner.tokenScan(); // Get next token, ADDED RETURN TO TREE
+	}
+	else {
+		// ERROR, NO RETURN FOUND
+	}
 }
 
 
