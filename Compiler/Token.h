@@ -51,4 +51,5 @@ struct token {
 	string t_string;
 	char t_char;
 	float t_float;
+	int lineNum;
 };

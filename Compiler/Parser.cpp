@@ -24,9 +24,17 @@ void Parser::Program() {
 	if (tempToken.t_type == PROGRAM) {
 		ProgramHead(); // Run program header procedure
 		ProgramBody(); // Rune program body procedure
+
+		if (tempToken.t_type != FILEEND) {
+			// ERROR, MISSING FILE END
+			ParsingError tempError("ERROR, MISSING '.' FOR END OF FILE", tempToken.lineNum);
+			ResultOfParse.push_back(tempError);
+		}
 	}
 	else {
 		// ERROR FIRST TOKEN WAS NOT PROGRAM RESERVE WORD, VIOLATION OF LANGUAGE
+		ParsingError tempError("ERROR, MISSING 'PROGRAM' AT FILE BEGIN", tempToken.lineNum);
+		ResultOfParse.push_back(tempError);
 	}
 }
 
@@ -44,9 +52,8 @@ void Parser::ProgramHead() {
 		if (tempToken.t_type == IS) {
 			tempToken = inputScanner.tokenScan(); // Get next token, ADDED IS TO TREE
 		}
-
 		else {
-			// ERROR
+			// ERROR, NO IS IN PROGRAM HEADER
 		}
 	}
 }
@@ -65,9 +72,8 @@ void Parser::ProgramBody() {
 		if (tempToken.t_type == SEMICOLON) {
 			tempToken = inputScanner.tokenScan(); // Get next token, ADDED SEMICOLON TO TREE
 		}
-
 		else {
-			// ERROR
+			// ERROR, NO SEMICOLON AFTER DECLARATION
 		}
 	}
 
@@ -532,62 +538,267 @@ void Parser::Return() {
 
 
 
-
+// Identifier
 void Parser::Ident() {
-
+	tempToken = inputScanner.tokenScan(); // Get next token, ADDED IDENTIFIER TO TREE
 }
 
-
+// Expression
 void Parser::Expr() {
 
+	// Check for NOT
+	if (tempToken.t_type == NOT) {
+		tempToken = inputScanner.tokenScan(); // Get next token, ADDED NOT TO TREE
+	}
+
+	Arith(); // Run arithmetic procedure
+	ExprPrime(); // Run expression prime procedure
+	return; // Return out of the function
 }
 
-
+// Expression Prime
 void Parser::ExprPrime() {
 
+	// Check for AND
+	if (tempToken.t_type == AND) {
+		tempToken = inputScanner.tokenScan(); // Get next token, ADDED AND TO TREE
+
+		Arith(); // Run arithmetic procedure
+		ExprPrime(); // Run expression prime procedure
+		return; // Return out of the function
+	}
+
+	// Check for OR
+	else if (tempToken.t_type == OR) {
+		tempToken = inputScanner.tokenScan(); // Get next token, ADDED OR TO TREE
+		Arith(); // Run arithmetic procedure
+		ExprPrime(); // Run expression prime procedure
+		return; // Return out of the function
+	}
+	else {
+		return; // Return out of the function
+	}
 }
 
-
+// Arithmetic
 void Parser::Arith() {
-
+	Relat(); // Run relation procedure
+	ArithPrime(); // Run arithmetic prime procedure
+	return; // Return out of the function
 }
 
-
+// Arithmetic Prime
 void Parser::ArithPrime() {
 
+	// Check for ADD
+	if (tempToken.t_type == ADD) {
+		tempToken = inputScanner.tokenScan(); // Get next token, ADDED ADD TO TREE
+		Relat(); // Run relation procedure
+		ArithPrime(); // Run arithmetic prime procedure
+		return; // Return out of the function
+	}
+
+	// Check for SUB
+	else if (tempToken.t_type == SUB) {
+		tempToken = inputScanner.tokenScan(); // Get next token, ADDED SUB TO TREE
+		Relat(); // Run relation procedure
+		ArithPrime(); // Run arithmetic prime procedure
+		return; // Return out of the function
+	}
+	else {
+		return; // Return out of the function
+	}
 }
 
-
+// Relation
 void Parser::Relat() {
-
+	Term(); // Run term procedure
+	RelatPrime(); // Run relation prime procedure
+	return; // Return out of the function
 }
 
-
+// Relation Prime
 void Parser::RelatPrime() {
 
+	// Check for LESS
+	if (tempToken.t_type == LESS) {
+		tempToken = inputScanner.tokenScan(); // Get next token, ADDED LESS TO TREE
+		Term(); // Run term procedure
+		RelatPrime(); // Run relation prime procedure
+		return; // Return out of the function
+	}
+
+	// Check for GREAT
+	else if (tempToken.t_type == GREAT) {
+		tempToken = inputScanner.tokenScan(); // Get next token, ADDED GREAT TO TREE
+		Term(); // Run term procedure
+		RelatPrime(); // Run relation prime procedure
+		return; // Return out of the function
+	}
+
+	// Check for EQUALS
+	else if (tempToken.t_type == EQUALS) {
+		tempToken = inputScanner.tokenScan(); // Get next token, EQUALS GREAT TO TREE
+		Term(); // Run term procedure
+		RelatPrime(); // Run relation prime procedure
+		return; // Return out of the function
+	}
+
+	// Check for NOT EQUAL
+	else if (tempToken.t_type == NOTEQUAL) {
+		tempToken = inputScanner.tokenScan(); // Get next token, ADDED NOTEQUAL TO TREE
+		Term(); // Run term procedure
+		RelatPrime(); // Run relation prime procedure
+		return; // Return out of the function
+	}
+
+	// Check for LESSEQ
+	else if (tempToken.t_type == LESSEQ) {
+		tempToken = inputScanner.tokenScan(); // Get next token, ADDED LESSEQ TO TREE
+		Term(); // Run term procedure
+		RelatPrime(); // Run relation prime procedure
+		return; // Return out of the function
+	}
+
+	// Check for GREATEQ
+	else if (tempToken.t_type == GREATEQ) {
+		tempToken = inputScanner.tokenScan(); // Get next token, ADDED GREATEQ TO TREE
+		Term(); // Run term procedure
+		RelatPrime(); // Run relation prime procedure
+		return; // Return out of the function
+	}
+	else {
+		return; // Return out of the function
+	}
 }
 
-
+// Term
 void Parser::Term() {
-
+	Factor(); // Run factor procedure
+	TermPrime(); // Run term prime procedure
+	return; // Return out of the function
 }
 
-
+// Term Prime
 void Parser::TermPrime() {
 
+	// Check for MULT
+	if (tempToken.t_type == MULT) {
+		tempToken = inputScanner.tokenScan(); // Get next token, ADDED MULT TO TREE
+		Factor(); // Run factor procedure
+		TermPrime(); // Run term prime procedure
+		return; // Return out of the function
+	}
+
+	// Check for DIVIDE
+	if (tempToken.t_type == DIVIDE) {
+		tempToken = inputScanner.tokenScan(); // Get next token, ADDED DIVIDE TO TREE
+		Factor(); // Run factor procedure
+		TermPrime(); // Run term prime procedure
+		return; // Return out of the function
+	}
+	else {
+		return; // Return out of the function
+	}
 }
 
-
+// Factor
 void Parser::Factor() {
 
+	// Check for left parentheses
+	if (tempToken.t_type == PARENBEGIN) {
+		tempToken = inputScanner.tokenScan(); // Get next token, ADDED LEFT PARENTHESES TO TREE
+		Expr(); // Run expression procedure
+
+		// Check for right parentheses
+		if (tempToken.t_type == PARENEND) {
+			tempToken = inputScanner.tokenScan(); // Get next token, ADDED RIGHT PARENTHESES TO TREE
+		}
+		else {
+			// ERROR, NO RIGHT PARENTHESES IN FACTOR
+		}
+		return; // Return out of the function
+	}
+
+	// Check for SUB
+	else if (tempToken.t_type == SUB) {
+		tempToken = inputScanner.tokenScan(); // Get next token, ADDED SUB TO TREE
+
+		// Check for IDENTIFIER
+		if (tempToken.t_type == IDENTIFIER) {
+			Name(); // Run name procedure
+			return; // Return out of the function
+		}
+
+		// Check for FLOAT OR INTEGER
+		if (tempToken.t_type == VALFLOAT || tempToken.t_type == VALINT) {
+			Number(); // Run number procedure
+			return; // Return out of the function
+		}
+	}
+
+	// Check for IDENTIFIER
+	else if (tempToken.t_type == IDENTIFIER) {
+		Name(); // Run name procedure
+		return; // Return out of the function
+	}
+
+	// Check for FLOAT OR INTEGER
+	else if (tempToken.t_type == VALFLOAT || tempToken.t_type == VALINT) {
+		Number(); // Run number procedure
+		return; // Return out of the function
+	}
+
+	// Check for STRING
+	else if (tempToken.t_type == VALSTRING) {
+		tempToken = inputScanner.tokenScan(); // Get next token, ADDED STRING TO TREE
+		return; // Return out of the function
+	}
+
+	// Check for CHAR
+	else if (tempToken.t_type == VALCHAR) {
+		tempToken = inputScanner.tokenScan(); // Get next token, ADDED CHAR TO TREE
+		return; // Return out of the function
+	}
+
+	// Check for TRUE
+	else if (tempToken.t_type == TRUE) {
+		tempToken = inputScanner.tokenScan(); // Get next token, ADDED TRUE TO TREE
+		return; // Return out of the function
+	}
+
+	// Check for FALSE
+	else if (tempToken.t_type == FALSE) {
+		tempToken = inputScanner.tokenScan(); // Get next token, ADDED FALSE TO TREE
+		return; // Return out of the function
+	}
+	else
+	{
+		return; // Return out of the function
+	}
 }
 
-
+// Name
 void Parser::Name() {
+	Ident(); // Run identifier procedure
 
+	// Check for left bracket
+	if (tempToken.t_type == BRACKBEGIN) {
+		tempToken = inputScanner.tokenScan(); // Get next token, ADDED LEFT BRACKET TO TREE
+		Expr(); // Run expression procedure
+
+		// Check for right bracket
+		if (tempToken.t_type == BRACKEND) {
+			tempToken = inputScanner.tokenScan(); // Get next token, ADDED RIGHT BRACKET TO TREE
+		}
+		else {
+			// ERROR, NO RIGHT BRACKET IN NAME
+		}
+		return; // Return out of the function
+	}
 }
 
-
+// Number
 void Parser::Number() {
-
+	tempToken = inputScanner.tokenScan(); // Get next token, ADDED NUMBER TO TREE
 }

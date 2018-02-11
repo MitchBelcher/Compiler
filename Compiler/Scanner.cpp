@@ -106,6 +106,7 @@ token Scanner::tokenScan() {
 	token tempToken; // Create temporary token for scanning
 
 	int currentChar; // Create a placeholder for the current character
+	int currentLineNumber = 0;
 	currentChar = getc(tempStream); // Get the current character from the stream
 
 	// Check for whitespace
@@ -113,23 +114,30 @@ token Scanner::tokenScan() {
 		currentChar = getc(tempStream); // If whitespace, move to next character
 	}
 
+	// Newline
+	if (currentChar == '\n') {
+		currentLineNumber++; // Increment counter for line number
+	}
+
 	// Parentheses begin
 	if (currentChar == '(') {
 		tempToken.t_type = PARENBEGIN;
 		tempToken.t_char = currentChar;
-
+		tempToken.lineNum = currentLineNumber;
 	}
 
 	// Parentheses end
 	else if (currentChar == ')') {
 		tempToken.t_type = PARENEND;
 		tempToken.t_char = currentChar;
+		tempToken.lineNum = currentLineNumber;
 	}
 
 	// File end
 	else if (currentChar == '.') {
 		tempToken.t_type = FILEEND;
 		tempToken.t_char = currentChar;
+		tempToken.lineNum = currentLineNumber;
 	}
 
 	// Identifiers, reserve words or true/false
@@ -137,6 +145,7 @@ token Scanner::tokenScan() {
 
 		tempToken.t_type = IDENTIFIER; // Assume the token is a identifier
 		tempToken.t_string = tolower(currentChar); // Add the current token to the string (lowercase)
+		tempToken.lineNum = currentLineNumber;
 
 		int nextChar; // Create a placeholder for the next character
 		nextChar = getc(tempStream); // Get the next character from the stream
@@ -166,6 +175,7 @@ token Scanner::tokenScan() {
 		// Ensure the next char is a ' to signal the end of the character definition
 		if (nextChar == 39) {
 			tempToken.t_type = VALCHAR;
+			tempToken.lineNum = currentLineNumber;
 		}
 
 		// The next char did not signal the end of the character definition, the token violates language rules
@@ -191,6 +201,7 @@ token Scanner::tokenScan() {
 		// Ensure the next char is a " to signal the end of the string definition
 		if (nextChar == '"') {
 			tempToken.t_type = VALSTRING;
+			tempToken.lineNum = currentLineNumber;
 		}
 
 		// The next char did not signal the end of the string definition, the token violates language rules
@@ -239,6 +250,7 @@ token Scanner::tokenScan() {
 
 			ungetc(nextChar, tempStream); // Put invalid character back on the temp stream
 			tempToken.t_type = VALFLOAT; // Set token type to float, since we found a .
+			tempToken.lineNum = currentLineNumber;
 			tempToken.t_float = atof(tempToken.t_string.c_str()); // Convert to float, and save in token float element
 		}
 
@@ -246,6 +258,7 @@ token Scanner::tokenScan() {
 		else {
 			ungetc(nextChar, tempStream); // Put invalid character back on the temp stream
 			tempToken.t_type = VALINT; // Set token type to int, since we never found a .
+			tempToken.lineNum = currentLineNumber;
 			tempToken.t_int = atoi(tempToken.t_string.c_str()); // Convert to integer, and save in token integer element
 		}
 
@@ -255,24 +268,28 @@ token Scanner::tokenScan() {
 	else if (currentChar == '&') {
 		tempToken.t_type = AND;
 		tempToken.t_char = currentChar;
+		tempToken.lineNum = currentLineNumber;
 	}
 
 	// Or
 	else if (currentChar == '|') {
 		tempToken.t_type = OR;
 		tempToken.t_char = currentChar;
+		tempToken.lineNum = currentLineNumber;
 	}
 
 	// ;
 	else if (currentChar == ';') {
 		tempToken.t_type = SEMICOLON;
 		tempToken.t_char = currentChar;
+		tempToken.lineNum = currentLineNumber;
 	}
 
 	// ,
 	else if (currentChar == ',') {
 		tempToken.t_type = COMMA;
 		tempToken.t_char = currentChar;
+		tempToken.lineNum = currentLineNumber;
 	}
 
 	// : or :=
@@ -281,8 +298,9 @@ token Scanner::tokenScan() {
 		tempToken.t_string += currentChar;
 
 		int nextChar;
-
 		nextChar = getc(tempStream);
+
+		tempToken.lineNum = currentLineNumber;
 
 		if (nextChar = '=') {
 			tempToken.t_type = SEMIEQUAL;
@@ -298,12 +316,14 @@ token Scanner::tokenScan() {
 	else if (currentChar == '[') {
 		tempToken.t_type = BRACKBEGIN;
 		tempToken.t_char = currentChar;
+		tempToken.lineNum = currentLineNumber;
 	}
 
 	// ]
 	else if (currentChar == ']') {
 		tempToken.t_type = BRACKEND;
 		tempToken.t_char = currentChar;
+		tempToken.lineNum = currentLineNumber;
 	}
 
 	// = or ==
@@ -313,6 +333,8 @@ token Scanner::tokenScan() {
 
 		int nextChar;
 		nextChar = getc(tempStream);
+
+		tempToken.lineNum = currentLineNumber;
 
 		if (nextChar == '=') {
 			tempToken.t_type = DOUBLEEQUAL;
@@ -331,6 +353,8 @@ token Scanner::tokenScan() {
 		int nextChar;
 		nextChar = getc(tempStream);
 
+		tempToken.lineNum = currentLineNumber;
+
 		if (nextChar == '=') {
 			tempToken.t_type = LESSEQ;
 		}
@@ -347,6 +371,8 @@ token Scanner::tokenScan() {
 
 		int nextChar;
 		nextChar = getc(tempStream);
+
+		tempToken.lineNum = currentLineNumber;
 
 		if (nextChar == '=') {
 			tempToken.t_type = GREATEQ;
@@ -365,6 +391,8 @@ token Scanner::tokenScan() {
 		int nextChar;
 		nextChar = getc(tempStream);
 
+		tempToken.lineNum = currentLineNumber;
+
 		if (nextChar == '=') {
 			tempToken.t_type = NOTEQUAL;
 		}
@@ -378,12 +406,14 @@ token Scanner::tokenScan() {
 	else if (currentChar == '+') {
 		tempToken.t_type = ADD;
 		tempToken.t_char = currentChar;
+		tempToken.lineNum = currentLineNumber;
 	}
 
 	// -
 	else if (currentChar == '-') {
 		tempToken.t_type = SUB;
 		tempToken.t_char = currentChar;
+		tempToken.lineNum = currentLineNumber;
 	}
 
 	// * or */
@@ -392,6 +422,8 @@ token Scanner::tokenScan() {
 
 		int nextChar;
 		nextChar = getc(tempStream);
+
+		tempToken.lineNum = currentLineNumber;
 
 		if (nextChar == '/') {
 			//////////////////////////////////////////
@@ -412,6 +444,8 @@ token Scanner::tokenScan() {
 
 		int nextChar;
 		nextChar = getc(tempStream);
+
+		tempToken.lineNum = currentLineNumber;
 
 		if (nextChar == '/') {
 
@@ -443,6 +477,7 @@ token Scanner::tokenScan() {
 	else {
 		tempToken.t_type = INVALID;
 		tempToken.t_char = currentChar;
+		tempToken.lineNum = currentLineNumber;
 	}
 
 	return tempToken; // Return the token we have scanned

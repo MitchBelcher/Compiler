@@ -8,6 +8,14 @@ An instance of Scanner, a temporary token for parsing, as well as declarations f
 #pragma once
 
 #include "Scanner.h"
+#include <vector>
+
+struct ParsingError {
+	string errorString;
+	int lineNumber;
+
+	ParsingError(string string, int LineNum) : errorString(string), lineNumber(LineNum) {}
+};
 
 class Parser {
 public:
@@ -15,6 +23,7 @@ public:
 	void parseFile();
 
 	Scanner inputScanner;
+	vector<ParsingError> ResultOfParse;
 
 private:
 	token tempToken;
