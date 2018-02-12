@@ -181,6 +181,8 @@ token Scanner::tokenScan() {
 		// The next char did not signal the end of the character definition, the token violates language rules
 		else {
 			tempToken.t_type = INVALID;
+			ScannerError tempError("ERROR, INVALID CHARACTER DEFINITION", tempToken.lineNum);
+			ResultOfScan.push_back(tempError);
 		}
 	}
 
@@ -207,6 +209,8 @@ token Scanner::tokenScan() {
 		// The next char did not signal the end of the string definition, the token violates language rules
 		else {
 			tempToken.t_type = INVALID;
+			ScannerError tempError("ERROR, INVALID STRING DEFINITION", tempToken.lineNum);
+			ResultOfScan.push_back(tempError);
 		}
 
 	}
@@ -398,6 +402,8 @@ token Scanner::tokenScan() {
 		}
 		else {
 			tempToken.t_type = INVALID;
+			ScannerError tempError("ERROR, INVALID USE OF '!'", tempToken.lineNum);
+			ResultOfScan.push_back(tempError);
 			ungetc(nextChar, tempStream);
 		}
 	}
@@ -478,6 +484,8 @@ token Scanner::tokenScan() {
 		tempToken.t_type = INVALID;
 		tempToken.t_char = currentChar;
 		tempToken.lineNum = currentLineNumber;
+		ScannerError tempError("ERROR, INVALID TOKEN, NO APPROPRIATE MATCH IN SCAN", tempToken.lineNum);
+		ResultOfScan.push_back(tempError);
 	}
 
 	return tempToken; // Return the token we have scanned

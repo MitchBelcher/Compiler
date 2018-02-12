@@ -11,10 +11,10 @@ An instance of Scanner, a temporary token for parsing, as well as declarations f
 #include <vector>
 
 struct ParsingError {
-	string errorString;
+	string parseError;
 	int lineNumber;
 
-	ParsingError(string string, int LineNum) : errorString(string), lineNumber(LineNum) {}
+	ParsingError(string string, int LineNum) : parseError(string), lineNumber(LineNum) {}
 };
 
 class Parser {
