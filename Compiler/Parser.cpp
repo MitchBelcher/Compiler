@@ -46,8 +46,6 @@ void Parser::ProgramHead() {
 		tempToken = inputScanner.tokenScan(); // Get next token
 		Ident(); // Run identifier procedure
 
-		tempToken = inputScanner.tokenScan(); // Get next token
-
 		// Check that the token is the is reserve word
 		if (tempToken.t_type == IS) {
 			tempToken = inputScanner.tokenScan(); // Get next token, ADDED IS TO TREE
@@ -68,7 +66,7 @@ void Parser::ProgramBody() {
 	while (tempToken.t_type == GLOBAL || tempToken.t_type == PROCEDURE || tempToken.t_type == INTEGER || tempToken.t_type == FLOAT || tempToken.t_type == BOOL || tempToken.t_type == STRING || tempToken.t_type == CHAR) {
 		Declare(); // Run declaration procedure
 
-		tempToken = inputScanner.tokenScan(); // Get next token
+		//tempToken = inputScanner.tokenScan(); // Get next token
 
 		// Check that the token is the semicolon type
 		if (tempToken.t_type == SEMICOLON) {
@@ -106,6 +104,24 @@ void Parser::ProgramBody() {
 			ParsingError tempError("PARSE ERROR, MISSING ';' IN STATEMENT", tempToken.lineNum);
 			ResultOfParse.push_back(tempError);
 		}
+	}
+
+	// Check for END
+	if (tempToken.t_type == END) {
+		tempToken = inputScanner.tokenScan(); // Get next token, ADDED END TO TREE
+
+		// Check for PROGRAM
+		if (tempToken.t_type == PROGRAM) {
+			tempToken = inputScanner.tokenScan(); // Get next token, ADDED PROGRAM TO TREE
+		}
+		else {
+			ParsingError tempError("PARSE ERROR, MISSING PROGRAM IN END PROGRAM", tempToken.lineNum);
+			ResultOfParse.push_back(tempError);
+		}
+	}
+	else {
+		ParsingError tempError("PARSE ERROR, MISSING END IN END PROGRAM", tempToken.lineNum);
+		ResultOfParse.push_back(tempError);
 	}
 }
 
@@ -245,8 +261,6 @@ void Parser::ProcBody() {
 	while (tempToken.t_type == GLOBAL || tempToken.t_type == PROCEDURE || tempToken.t_type == INTEGER || tempToken.t_type == FLOAT || tempToken.t_type == BOOL || tempToken.t_type == STRING || tempToken.t_type == CHAR) {
 		Declare(); // Run declaration procedure
 
-		tempToken = inputScanner.tokenScan(); // Get next token
-
 		// Check that the token is the semicolon type
 		if (tempToken.t_type == SEMICOLON) {
 			tempToken = inputScanner.tokenScan(); // Get next token, ADDED SEMICOLON TO TREE
@@ -282,6 +296,24 @@ void Parser::ProcBody() {
 			ParsingError tempError("PARSE ERROR, MISSING ';' IN STATEMENT", tempToken.lineNum);
 			ResultOfParse.push_back(tempError);
 		}
+	}
+
+	// Check for END
+	if (tempToken.t_type == END) {
+		tempToken = inputScanner.tokenScan(); // Get next token, ADDED END TO TREE
+
+		// Check for PROCEDURE
+		if (tempToken.t_type == PROCEDURE) {
+			tempToken = inputScanner.tokenScan(); // Get next token, ADDED PROGRAM TO TREE
+		}
+		else {
+			ParsingError tempError("PARSE ERROR, MISSING PROCEDURE IN END PROCEDURE", tempToken.lineNum);
+			ResultOfParse.push_back(tempError);
+		}
+	}
+	else {
+		ParsingError tempError("PARSE ERROR, MISSING END IN END PROCEDURE", tempToken.lineNum);
+		ResultOfParse.push_back(tempError);
 	}
 }
 

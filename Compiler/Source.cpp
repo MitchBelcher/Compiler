@@ -21,18 +21,15 @@ int main(int argc, char *argv[]) {
 	Parser fileParse(filePath);
 	fileParse.parseFile();
 
-	Scanner inputScanner; // Create Scanner instance
+	//Scanner inputScanner; // Create Scanner instance
 
-	for (int i = 0; i < inputScanner.ResultOfScan.size(); i++) {
-		cout << inputScanner.ResultOfScan[i].lineNumber << '\t' << inputScanner.ResultOfScan[i].scanError << endl;
-	}
-
+	// Print out errors
 	for (int i = 0; i < fileParse.ResultOfParse.size(); i++) {
 		cout << fileParse.ResultOfParse[i].lineNumber << '\t' << fileParse.ResultOfParse[i].parseError << endl;
 	}
-
-
-
+	if (fileParse.ResultOfParse.size() == 0) {
+		cout << "No parse errors found!" << endl;
+	}
 
 	//inputScanner.scanIn(filePath);
 
@@ -42,4 +39,5 @@ int main(int argc, char *argv[]) {
 	//	cout << tokens[i].t_type << endl;
 	//}
 
+	//cin.get();
 }

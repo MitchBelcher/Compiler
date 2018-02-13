@@ -9,6 +9,8 @@ This cpp file contains the definitions for Scanner class functions, like initial
 #include <string>
 #include <stdio.h>
 
+int currentLineNumber = 1;
+
 // Simple function to return a list of tokens
 vector<token> Scanner::getTokens() {
 	return tempTokenList;
@@ -98,6 +100,10 @@ void Scanner::checkForReserves(token &tempToken) {
 			tempToken.t_type = FALSE;
 			tempToken.t_bool = false;
 		}
+
+		if (tempToken.t_string.compare("is") == 0) {
+			tempToken.t_type = IS;
+		}
 }
 
 // Function to systematically scan characters to create a final token
@@ -106,17 +112,16 @@ token Scanner::tokenScan() {
 	token tempToken; // Create temporary token for scanning
 
 	int currentChar; // Create a placeholder for the current character
-	int currentLineNumber = 0;
 	currentChar = getc(tempStream); // Get the current character from the stream
-
-	// Check for whitespace
-	while (isspace(currentChar)) {
-		currentChar = getc(tempStream); // If whitespace, move to next character
-	}
 
 	// Newline
 	if (currentChar == '\n') {
 		currentLineNumber++; // Increment counter for line number
+	}
+
+	// Check for whitespace
+	while (isspace(currentChar)) {
+		currentChar = getc(tempStream); // If whitespace, move to next character
 	}
 
 	// Parentheses begin
