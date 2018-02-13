@@ -10,6 +10,7 @@ This cpp file contains the definitions for Scanner class functions, like initial
 #include <stdio.h>
 
 int currentLineNumber = 1;
+int commentDepth = 0;
 
 // Simple function to return a list of tokens
 vector<token> Scanner::getTokens() {
@@ -114,13 +115,15 @@ token Scanner::tokenScan() {
 	int currentChar; // Create a placeholder for the current character
 	currentChar = getc(tempStream); // Get the current character from the stream
 
-	// Newline
-	if (currentChar == '\n') {
-		currentLineNumber++; // Increment counter for line number
-	}
+	
 
 	// Check for whitespace
 	while (isspace(currentChar)) {
+
+		// Newline
+		if (currentChar == '\n') {
+			currentLineNumber++; // Increment counter for line number
+		}
 		currentChar = getc(tempStream); // If whitespace, move to next character
 	}
 
@@ -313,6 +316,7 @@ token Scanner::tokenScan() {
 
 		if (nextChar = '=') {
 			tempToken.t_type = SEMIEQUAL;
+			tempToken.t_string += nextChar;
 		}
 
 		else {
@@ -427,25 +431,11 @@ token Scanner::tokenScan() {
 		tempToken.lineNum = currentLineNumber;
 	}
 
-	// * or */
+	// *
 	else if (currentChar == '*') {
-		tempToken.t_string += currentChar;
-
-		int nextChar;
-		nextChar = getc(tempStream);
-
+		tempToken.t_type = MULT;
+		tempToken.t_char = currentChar;
 		tempToken.lineNum = currentLineNumber;
-
-		if (nextChar == '/') {
-			//////////////////////////////////////////
-			// TODO //////////////////////////////////
-			//////////////////////////////////////////
-			tempToken.t_type = EDBLKCOMMENT;
-		}
-		else {
-			tempToken.t_type = MULT;
-			tempToken.t_char = currentChar;
-		}
 	}
 
 	// /, // or /*
@@ -467,14 +457,53 @@ token Scanner::tokenScan() {
 
 			ungetc(nextChar, tempStream);
 
-			tempToken.t_type = COMMENT;
+			tempToken = tokenScan();
 		}
 
+		// Found block comment start
 		else if (nextChar == '*') {
-			///////////////////////////////////
-			// TODO ///////////////////////////
-			///////////////////////////////////
-			tempToken.t_type = STBLKCOMMENT;
+			tempToken.t_string += nextChar;
+			commentDepth++;
+			nextChar = getc(tempStream);
+
+			while (commentDepth != 0 && nextChar != -1) {
+				while (nextChar != '*' && nextChar != '/' && nextChar != '\n' && nextChar != -1) {
+					tempToken.t_string += nextChar;
+					nextChar = getc(tempStream);
+				}
+				if (nextChar == '*') {
+					tempToken.t_string += nextChar;
+					nextChar = getc(tempStream);
+					if (nextChar == '/') {
+						commentDepth--;
+						tempToken.t_string += nextChar;
+					}
+					else {
+						nextChar = getc(tempStream);
+						tempToken.t_string += nextChar;
+					}
+				}
+				if (nextChar == '/') {
+					tempToken.t_string += nextChar;
+					nextChar = getc(tempStream);
+					if (nextChar == '*') {
+						commentDepth++;
+						tempToken.t_string += nextChar;
+					}
+					else {
+						nextChar = getc(tempStream);
+						tempToken.t_string += nextChar;
+					}
+				}
+				if (nextChar == '\n') {
+					currentLineNumber++;
+					nextChar = getc(tempStream);
+				}
+			}
+			ungetc(nextChar, tempStream);
+			if (commentDepth == 0) {
+				tempToken = tokenScan();
+			}
 		}
 
 		else {

@@ -16,7 +16,8 @@ using namespace std;
 // Main
 int main(int argc, char *argv[]) {
 
-	const char* filePath = "C://Users//guita//Documents//Compiler//testPgms//correct//test_program_minimal.src"; // Filepath to read
+	//const char* filePath = "C://Users//guita//Documents//Compiler//testPgms//correct//test_program_minimal.src"; // Filepath to read
+	const char* filePath = "..//testPgms//correct//test1b.src"; // Filepath to read
 
 	Parser fileParse(filePath);
 	fileParse.parseFile();
@@ -38,6 +39,4 @@ int main(int argc, char *argv[]) {
 	//for (int i = 0; i < tokens.size(); i++) {
 	//	cout << tokens[i].t_type << endl;
 	//}
-
-	//cin.get();
 }

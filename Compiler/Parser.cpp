@@ -233,16 +233,24 @@ void Parser::ProcHead() {
 		// Check for left parentheses
 		if (tempToken.t_type == PARENBEGIN) {
 			tempToken = inputScanner.tokenScan(); // Get next token, ADDED LEFT PARENTHESES TO TREE
-			ParamList();
 
 			// Check for right parentheses
 			if (tempToken.t_type == PARENEND) {
 				tempToken = inputScanner.tokenScan(); // Get next token, ADDED RIGHT PARENTHESES TO TREE
 			}
 			else {
+				ParamList();
+
+				if (tempToken.t_type == PARENEND) {
+					tempToken = inputScanner.tokenScan();
+				}
+				else {
+					ParsingError tempError("PARSE ERROR, MISSING ')' IN PROCEDURE HEADER", tempToken.lineNum);
+					ResultOfParse.push_back(tempError);
+				}
 				// ERROR, RIGHT PARENTHESES MISSING, VIOLATION OF PROCEDURE CALL
-				ParsingError tempError("PARSE ERROR, MISSING ')' IN PROCEDURE HEADER", tempToken.lineNum);
-				ResultOfParse.push_back(tempError);
+				/*ParsingError tempError("PARSE ERROR, MISSING ')' IN PROCEDURE HEADER", tempToken.lineNum);
+				ResultOfParse.push_back(tempError);*/
 			}
 		}
 	}
@@ -369,6 +377,11 @@ void Parser::TypeMark() {
 	// Check for CHAR
 	else if (tempToken.t_type == CHAR) {
 		tempToken = inputScanner.tokenScan(); // Get next token, ADDED CHAR TO TREE
+	}
+
+	// Check for STRING
+	else if (tempToken.t_type == STRING) {
+		tempToken = inputScanner.tokenScan(); // Get next token, ADDED STRING TO TREE
 	}
 	else {
 		// ERROR, NO VALID TYPE DECLARED
@@ -579,7 +592,7 @@ void Parser::Loop() {
 		// Check for left parentheses
 		if (tempToken.t_type == PARENBEGIN) {
 			tempToken = inputScanner.tokenScan(); // Get next token, ADDED LEFT PARENTHESES TO TREE
-			AssignState(); // Run statement assignment
+			Assign(); // Run statement assignment
 
 			// Check for SEMICOLON
 			if (tempToken.t_type == SEMICOLON) {
@@ -769,8 +782,8 @@ void Parser::RelatPrime() {
 	}
 
 	// Check for EQUALS
-	else if (tempToken.t_type == EQUALS) {
-		tempToken = inputScanner.tokenScan(); // Get next token, EQUALS GREAT TO TREE
+	else if (tempToken.t_type == DOUBLEEQUAL) {
+		tempToken = inputScanner.tokenScan(); // Get next token, DOUBLEEQUAL GREAT TO TREE
 		Term(); // Run term procedure
 		RelatPrime(); // Run relation prime procedure
 		return; // Return out of the function
