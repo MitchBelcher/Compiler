@@ -5,6 +5,7 @@ This cpp file contains the definitions for Scanner class functions, like initial
 */
 
 #include "Scanner.h"
+#include "Errors.h"
 
 #include <string>
 #include <stdio.h>
@@ -148,6 +149,10 @@ token Scanner::tokenScan() {
 		tempToken.lineNum = currentLineNumber;
 	}
 
+	else if (currentChar == -1) {
+		tempToken.t_type = STREAMEND;
+	}
+
 	// Identifiers, reserve words or true/false
 	else if (isalpha(currentChar)) {
 
@@ -189,7 +194,7 @@ token Scanner::tokenScan() {
 		// The next char did not signal the end of the character definition, the token violates language rules
 		else {
 			tempToken.t_type = INVALID;
-			ScannerError tempError("ERROR, INVALID CHARACTER DEFINITION", tempToken.lineNum);
+			ScannerError tempError("ERROR, INVALID CHARACTER DEFINITION", tempToken.lineNum, tempToken.t_string);
 			ResultOfScan.push_back(tempError);
 		}
 	}
@@ -217,7 +222,7 @@ token Scanner::tokenScan() {
 		// The next char did not signal the end of the string definition, the token violates language rules
 		else {
 			tempToken.t_type = INVALID;
-			ScannerError tempError("ERROR, INVALID STRING DEFINITION", tempToken.lineNum);
+			ScannerError tempError("ERROR, INVALID STRING DEFINITION", tempToken.lineNum, tempToken.t_string);
 			ResultOfScan.push_back(tempError);
 		}
 
@@ -411,7 +416,7 @@ token Scanner::tokenScan() {
 		}
 		else {
 			tempToken.t_type = INVALID;
-			ScannerError tempError("ERROR, INVALID USE OF '!'", tempToken.lineNum);
+			ScannerError tempError("ERROR, INVALID USE OF '!'", tempToken.lineNum, tempToken.t_string);
 			ResultOfScan.push_back(tempError);
 			ungetc(nextChar, tempStream);
 		}
@@ -501,6 +506,9 @@ token Scanner::tokenScan() {
 				}
 			}
 			ungetc(nextChar, tempStream);
+			if (commentDepth > 0) {
+				tempToken.t_type = INVALID;
+			}
 			if (commentDepth == 0) {
 				tempToken = tokenScan();
 			}
@@ -518,12 +526,15 @@ token Scanner::tokenScan() {
 		tempToken.t_type = INVALID;
 		tempToken.t_char = currentChar;
 		tempToken.lineNum = currentLineNumber;
-		ScannerError tempError("ERROR, INVALID TOKEN, NO APPROPRIATE MATCH IN SCAN", tempToken.lineNum);
+		ScannerError tempError("ERROR, INVALID TOKEN, NO APPROPRIATE MATCH IN SCAN", tempToken.lineNum, tempToken.t_string);
 		ResultOfScan.push_back(tempError);
 	}
 
-	return tempToken; // Return the token we have scanned
+	if (tempToken.t_type == INVALID) {
+		tempToken = tokenScan();
+	}
 
+	return tempToken; // Return the token we have scanner
 }
 
 // Scanner initialization constructor, takes a filepath, and opens the stream for that path

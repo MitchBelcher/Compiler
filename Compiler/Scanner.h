@@ -12,13 +12,6 @@ A function to check if a given string is a reserve word, and a temporary filestr
 
 #include <vector>
 
-struct ScannerError {
-	string scanError;
-	int lineNumber;
-
-	ScannerError(string string, int LineNum) : scanError(string), lineNumber(LineNum) {}
-};
-
 class Scanner {
 public:
 	void init (const char* filePath); // Constructor (pass filepath)
@@ -27,7 +20,6 @@ public:
 	//void scanIn (const char* filePath);
 	token tokenScan (); // Scan in a token
 	vector<token> getTokens(); // Vector to get tokens out
-	vector<ScannerError> ResultOfScan;
 
 private:
 	void checkForReserves (token &tempToken); // Function to check string for reserve word

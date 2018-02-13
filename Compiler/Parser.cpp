@@ -5,6 +5,7 @@ This cpp file contains the definition for Parser class functions, each going thr
 */
 
 #include "Parser.h"
+#include "Errors.h"
 
 // Main parser constructor, which calls the constructor for the scanner instance
 Parser::Parser(const char* filePath) {
@@ -14,6 +15,16 @@ Parser::Parser(const char* filePath) {
 // Begin parsing the file by scanning the first token, and then running the program procedures
 void Parser::parseFile() {
 	tempToken = inputScanner.tokenScan();
+	if (tempToken.t_type == STREAMEND) {
+		ParsingError tempError("FATAL ERROR, MISMATCHED BLOCK COMMENTS", -1, "");
+		ResultOfParse.push_back(tempError);
+		return;
+	}
+	if (tempToken.t_type == INVALID) {
+		ParsingError tempError("FATAL ERROR, INVALID TOKEN FOUND", tempToken.lineNum, tempToken.t_string);
+		ResultOfParse.push_back(tempError);
+		return;
+	}
 	Program();
 }
 
@@ -27,13 +38,13 @@ void Parser::Program() {
 
 		if (tempToken.t_type != FILEEND) {
 			// ERROR, MISSING FILE END
-			ParsingError tempError("PARSE ERROR, MISSING '.' FOR END OF FILE", tempToken.lineNum);
+			ParsingError tempError("FATAL ERROR, MISSING '.' FOR END OF FILE", -1, "");
 			ResultOfParse.push_back(tempError);
 		}
 	}
 	else {
 		// ERROR FIRST TOKEN WAS NOT PROGRAM RESERVE WORD, VIOLATION OF LANGUAGE
-		ParsingError tempError("PARSE ERROR, MISSING 'PROGRAM' AT FILE BEGIN", tempToken.lineNum);
+		ParsingError tempError("PARSE ERROR, MISSING 'PROGRAM' AT FILE BEGIN", tempToken.lineNum, tempToken.t_string);
 		ResultOfParse.push_back(tempError);
 	}
 }
@@ -52,7 +63,7 @@ void Parser::ProgramHead() {
 		}
 		else {
 			// ERROR, NO IS IN PROGRAM HEADER
-			ParsingError tempError("PARSE ERROR, MISSING 'IS' AT FILE BEGIN", tempToken.lineNum);
+			ParsingError tempError("PARSE ERROR, MISSING 'IS' AT FILE BEGIN", tempToken.lineNum, tempToken.t_string);
 			ResultOfParse.push_back(tempError);
 		}
 	}
@@ -74,7 +85,7 @@ void Parser::ProgramBody() {
 		}
 		else {
 			// ERROR, NO SEMICOLON AFTER DECLARATION
-			ParsingError tempError("PARSE ERROR, MISSING ';' IN DECLARATION", tempToken.lineNum);
+			ParsingError tempError("PARSE ERROR, MISSING ';' IN DECLARATION", tempToken.lineNum, tempToken.t_string);
 			ResultOfParse.push_back(tempError);
 		}
 	}
@@ -86,7 +97,7 @@ void Parser::ProgramBody() {
 	}
 	else {
 		// ERROR, BEGIN RESERVE WORD NOT FOUND, VIOLATION OF LANGUAGE
-		ParsingError tempError("PARSE ERROR, MISSING BEGIN IN DECLARATION", tempToken.lineNum);
+		ParsingError tempError("PARSE ERROR, MISSING BEGIN IN DECLARATION", tempToken.lineNum, tempToken.t_string);
 		ResultOfParse.push_back(tempError);
 	}
 
@@ -101,7 +112,7 @@ void Parser::ProgramBody() {
 		}
 		else {
 			// ERROR, NO SEMICOLON, VIOLATION OF DECLARATION
-			ParsingError tempError("PARSE ERROR, MISSING ';' IN STATEMENT", tempToken.lineNum);
+			ParsingError tempError("PARSE ERROR, MISSING ';' IN STATEMENT", tempToken.lineNum, tempToken.t_string);
 			ResultOfParse.push_back(tempError);
 		}
 	}
@@ -115,12 +126,12 @@ void Parser::ProgramBody() {
 			tempToken = inputScanner.tokenScan(); // Get next token, ADDED PROGRAM TO TREE
 		}
 		else {
-			ParsingError tempError("PARSE ERROR, MISSING PROGRAM IN END PROGRAM", tempToken.lineNum);
+			ParsingError tempError("PARSE ERROR, MISSING PROGRAM IN END PROGRAM", tempToken.lineNum, tempToken.t_string);
 			ResultOfParse.push_back(tempError);
 		}
 	}
 	else {
-		ParsingError tempError("PARSE ERROR, MISSING END IN END PROGRAM", tempToken.lineNum);
+		ParsingError tempError("PARSE ERROR, MISSING END IN END PROGRAM", tempToken.lineNum, tempToken.t_string);
 		ResultOfParse.push_back(tempError);
 	}
 }
@@ -178,7 +189,7 @@ void Parser::Statement() {
 	}
 	else {
 		// ERROR, NO VALID STATEMENT PRESENT
-		ParsingError tempError("PARSE ERROR, NO VALID STATEMENT PRESENT", tempToken.lineNum);
+		ParsingError tempError("PARSE ERROR, NO VALID STATEMENT PRESENT", tempToken.lineNum, tempToken.t_string);
 		ResultOfParse.push_back(tempError);
 	}
 }
@@ -210,13 +221,13 @@ void Parser::VarDeclare() {
 			}
 			else {
 				// ERROR, MISSING RIGHT BRACKET, VIOLATION OF VARIABLE DECLARATION
-				ParsingError tempError("PARSE ERROR, MISSING '[' IN VARIABLE DECLARATION", tempToken.lineNum);
+				ParsingError tempError("PARSE ERROR, MISSING '[' IN VARIABLE DECLARATION", tempToken.lineNum, tempToken.t_string);
 				ResultOfParse.push_back(tempError);
 			}
 		}
 		else {
 			// ERROR, MISSING COLON, VIOLATION OF VARIABLE DECLARATION
-			ParsingError tempError("PARSE ERROR, MISSING ':' IN VARIABLE DECLARATION", tempToken.lineNum);
+			ParsingError tempError("PARSE ERROR, MISSING ':' IN VARIABLE DECLARATION", tempToken.lineNum, tempToken.t_string);
 			ResultOfParse.push_back(tempError);
 		}
 	}
@@ -245,7 +256,7 @@ void Parser::ProcHead() {
 					tempToken = inputScanner.tokenScan();
 				}
 				else {
-					ParsingError tempError("PARSE ERROR, MISSING ')' IN PROCEDURE HEADER", tempToken.lineNum);
+					ParsingError tempError("PARSE ERROR, MISSING ')' IN PROCEDURE HEADER", tempToken.lineNum, tempToken.t_string);
 					ResultOfParse.push_back(tempError);
 				}
 				// ERROR, RIGHT PARENTHESES MISSING, VIOLATION OF PROCEDURE CALL
@@ -256,7 +267,7 @@ void Parser::ProcHead() {
 	}
 	else {
 		// ERROR, PROCEDURE NOT FOUND, VIOLATION OF PROCEDURE CALL
-		ParsingError tempError("PARSE ERROR, MISSING PROCEDURE HEADER", tempToken.lineNum);
+		ParsingError tempError("PARSE ERROR, MISSING PROCEDURE HEADER", tempToken.lineNum, tempToken.t_string);
 		ResultOfParse.push_back(tempError);
 	}
 }
@@ -274,7 +285,7 @@ void Parser::ProcBody() {
 			tempToken = inputScanner.tokenScan(); // Get next token, ADDED SEMICOLON TO TREE
 		}
 		else {
-			ParsingError tempError("PARSE ERROR, MISSING ';' IN DECLARATION", tempToken.lineNum);
+			ParsingError tempError("PARSE ERROR, MISSING ';' IN DECLARATION", tempToken.lineNum, tempToken.t_string);
 			ResultOfParse.push_back(tempError);
 		}
 	}
@@ -286,7 +297,7 @@ void Parser::ProcBody() {
 	}
 	else {
 		// ERROR, BEGIN RESERVE WORD NOT FOUND, VIOLATION OF LANGUAGE
-		ParsingError tempError("PARSE ERROR, MISSING BEGIN IN PROCEDURE BODY", tempToken.lineNum);
+		ParsingError tempError("PARSE ERROR, MISSING BEGIN IN PROCEDURE BODY", tempToken.lineNum, tempToken.t_string);
 		ResultOfParse.push_back(tempError);
 	}
 
@@ -301,7 +312,7 @@ void Parser::ProcBody() {
 		}
 		else {
 			// ERROR, NO SEMICOLON, VIOLATION OF DECLARATION
-			ParsingError tempError("PARSE ERROR, MISSING ';' IN STATEMENT", tempToken.lineNum);
+			ParsingError tempError("PARSE ERROR, MISSING ';' IN STATEMENT", tempToken.lineNum, tempToken.t_string);
 			ResultOfParse.push_back(tempError);
 		}
 	}
@@ -315,12 +326,12 @@ void Parser::ProcBody() {
 			tempToken = inputScanner.tokenScan(); // Get next token, ADDED PROGRAM TO TREE
 		}
 		else {
-			ParsingError tempError("PARSE ERROR, MISSING PROCEDURE IN END PROCEDURE", tempToken.lineNum);
+			ParsingError tempError("PARSE ERROR, MISSING PROCEDURE IN END PROCEDURE", tempToken.lineNum, tempToken.t_string);
 			ResultOfParse.push_back(tempError);
 		}
 	}
 	else {
-		ParsingError tempError("PARSE ERROR, MISSING END IN END PROCEDURE", tempToken.lineNum);
+		ParsingError tempError("PARSE ERROR, MISSING END IN END PROCEDURE", tempToken.lineNum, tempToken.t_string);
 		ResultOfParse.push_back(tempError);
 	}
 }
@@ -385,7 +396,7 @@ void Parser::TypeMark() {
 	}
 	else {
 		// ERROR, NO VALID TYPE DECLARED
-		ParsingError tempError("PARSE ERROR, NO VALID TYPE DECLARED", tempToken.lineNum);
+		ParsingError tempError("PARSE ERROR, NO VALID TYPE DECLARED", tempToken.lineNum, tempToken.t_string);
 		ResultOfParse.push_back(tempError);
 	}
 }
@@ -409,7 +420,7 @@ void Parser::Assign() {
 			}
 			else {
 				// ERROR, VIOLATION IN IDENTIFIER ASSIGNMENT
-				ParsingError tempError("PARSE ERROR, MISSING ']' IN ASSIGNMENT", tempToken.lineNum);
+				ParsingError tempError("PARSE ERROR, MISSING ']' IN ASSIGNMENT", tempToken.lineNum, tempToken.t_string);
 				ResultOfParse.push_back(tempError);
 			}
 		}
@@ -424,7 +435,7 @@ void Parser::Assign() {
 				tempToken = inputScanner.tokenScan(); // Get next token, ADDED RIGHT PARENTHESES TO TREE
 			}
 			else {
-				ParsingError tempError("PARSE ERROR, MISSING ')' IN ASSIGNMENT", tempToken.lineNum);
+				ParsingError tempError("PARSE ERROR, MISSING ')' IN ASSIGNMENT", tempToken.lineNum, tempToken.t_string);
 				ResultOfParse.push_back(tempError);
 			}
 		}
@@ -444,7 +455,7 @@ void Parser::AssignState() {
 	}
 	else {
 		// ERROR, NO EQUALS IN ASSIGNMENT
-		ParsingError tempError("PARSE ERROR, MISSING ':=' IN ASSIGNMENT", tempToken.lineNum);
+		ParsingError tempError("PARSE ERROR, MISSING ':=' IN ASSIGNMENT", tempToken.lineNum, tempToken.t_string);
 		ResultOfParse.push_back(tempError);
 	}
 }
@@ -487,7 +498,7 @@ void Parser::If() {
 					}
 					else {
 						// ERROR, NO SEMICOLON IN STATEMENT
-						ParsingError tempError("PARSE ERROR, MISSING ';' IN STATEMENT", tempToken.lineNum);
+						ParsingError tempError("PARSE ERROR, MISSING ';' IN STATEMENT", tempToken.lineNum, tempToken.t_string);
 						ResultOfParse.push_back(tempError);
 					}
 
@@ -501,7 +512,7 @@ void Parser::If() {
 						}
 						else {
 							// ERROR, NO SEMICOLON IN STATEMENT
-							ParsingError tempError("PARSE ERROR, MISSING ';' IN STATEMENT", tempToken.lineNum);
+							ParsingError tempError("PARSE ERROR, MISSING ';' IN STATEMENT", tempToken.lineNum, tempToken.t_string);
 							ResultOfParse.push_back(tempError);
 						}
 					}
@@ -517,7 +528,7 @@ void Parser::If() {
 						}
 						else {
 							// ERROR, NO SEMICOLON IN STATEMENT
-							ParsingError tempError("PARSE ERROR, MISSING ';' IN STATEMENT", tempToken.lineNum);
+							ParsingError tempError("PARSE ERROR, MISSING ';' IN STATEMENT", tempToken.lineNum, tempToken.t_string);
 							ResultOfParse.push_back(tempError);
 						}
 
@@ -531,7 +542,7 @@ void Parser::If() {
 							}
 							else {
 								// ERROR, NO SEMICOLON IN STATEMENT
-								ParsingError tempError("PARSE ERROR, MISSING ';' IN STATEMENT", tempToken.lineNum);
+								ParsingError tempError("PARSE ERROR, MISSING ';' IN STATEMENT", tempToken.lineNum, tempToken.t_string);
 								ResultOfParse.push_back(tempError);
 							}
 						}
@@ -547,37 +558,37 @@ void Parser::If() {
 						}
 						else {
 							// ERROR, NO IF FOUND IN END IF
-							ParsingError tempError("PARSE ERROR, MISSING IF IN END IF", tempToken.lineNum);
+							ParsingError tempError("PARSE ERROR, MISSING IF IN END IF", tempToken.lineNum, tempToken.t_string);
 							ResultOfParse.push_back(tempError);
 						}
 					}
 					else {
 						// ERROR, NO END FOUND AFTER IF STATEMENT
-						ParsingError tempError("PARSE ERROR, MISSING END IN IF STATEMENT", tempToken.lineNum);
+						ParsingError tempError("PARSE ERROR, MISSING END IN IF STATEMENT", tempToken.lineNum, tempToken.t_string);
 						ResultOfParse.push_back(tempError);
 					}
 				}
 				else {
 					// ERROR, NO THEN FOUND AFTER IF STATEMENT
-					ParsingError tempError("PARSE ERROR, MISSING THEN IN IF STATEMENT", tempToken.lineNum);
+					ParsingError tempError("PARSE ERROR, MISSING THEN IN IF STATEMENT", tempToken.lineNum, tempToken.t_string);
 					ResultOfParse.push_back(tempError);
 				}
 			}
 			else {
 				// ERROR, MISSING RIGHT PARENTHESES AFTER IF STATEMENT CONDITION
-				ParsingError tempError("PARSE ERROR, MISSING ')' IN IF STATEMENT", tempToken.lineNum);
+				ParsingError tempError("PARSE ERROR, MISSING ')' IN IF STATEMENT", tempToken.lineNum, tempToken.t_string);
 				ResultOfParse.push_back(tempError);
 			}
 		}
 		else {
 			// ERROR, MISSING LEFT PARENTHESE AFTER IF STATEMENT FOR CONDITION
-			ParsingError tempError("PARSE ERROR, MISSING '(' IN IF STATEMENT", tempToken.lineNum);
+			ParsingError tempError("PARSE ERROR, MISSING '(' IN IF STATEMENT", tempToken.lineNum, tempToken.t_string);
 			ResultOfParse.push_back(tempError);
 		}
 	}
 	else {
 		// ERROR, MISSING IF
-		ParsingError tempError("FATAL ERROR, LOOKING FOR IF, MISSING IF", tempToken.lineNum);
+		ParsingError tempError("FATAL ERROR, LOOKING FOR IF, MISSING IF", tempToken.lineNum, tempToken.t_string);
 		ResultOfParse.push_back(tempError);
 	}
 }
@@ -600,7 +611,7 @@ void Parser::Loop() {
 			}
 			else {
 				// ERROR, MISSING SEMICOLON IN FOR STATEMENT
-				ParsingError tempError("PARSE ERROR, MISSING ';' IN LOOP STATEMENT", tempToken.lineNum);
+				ParsingError tempError("PARSE ERROR, MISSING ';' IN LOOP STATEMENT", tempToken.lineNum, tempToken.t_string);
 				ResultOfParse.push_back(tempError);
 			}
 			Expr(); // Run expression procedure
@@ -618,7 +629,7 @@ void Parser::Loop() {
 						tempToken = inputScanner.tokenScan(); // Get next token, ADDED SEMICOLON TO TREE
 					}
 					else {
-						ParsingError tempError("PARSE ERROR, MISSING ';' IN LOOP STATEMENT", tempToken.lineNum);
+						ParsingError tempError("PARSE ERROR, MISSING ';' IN LOOP STATEMENT", tempToken.lineNum, tempToken.t_string);
 						ResultOfParse.push_back(tempError);
 					}
 				}
@@ -632,27 +643,27 @@ void Parser::Loop() {
 						tempToken = inputScanner.tokenScan(); // Get next token, ADDED FOR TO TREE
 					}
 					else {
-						ParsingError tempError("PARSE ERROR, MISSING FOR IN END FOR STATEMENT", tempToken.lineNum);
+						ParsingError tempError("PARSE ERROR, MISSING FOR IN END FOR STATEMENT", tempToken.lineNum, tempToken.t_string);
 						ResultOfParse.push_back(tempError);
 					}
 				}
 				else {
-					ParsingError tempError("PARSE ERROR, MISSING END IN END FOR STATEMENT", tempToken.lineNum);
+					ParsingError tempError("PARSE ERROR, MISSING END IN END FOR STATEMENT", tempToken.lineNum, tempToken.t_string);
 					ResultOfParse.push_back(tempError);
 				}
 			}
 			else {
-				ParsingError tempError("PARSE ERROR, MISSING ')' in FOR LOOP", tempToken.lineNum);
+				ParsingError tempError("PARSE ERROR, MISSING ')' in FOR LOOP", tempToken.lineNum, tempToken.t_string);
 				ResultOfParse.push_back(tempError);
 			}
 		}
 		else {
-			ParsingError tempError("PARSE ERROR, MISSING '(' in FOR LOOP", tempToken.lineNum);
+			ParsingError tempError("PARSE ERROR, MISSING '(' in FOR LOOP", tempToken.lineNum, tempToken.t_string);
 			ResultOfParse.push_back(tempError);
 		}
 	}
 	else {
-		ParsingError tempError("FATAL ERROR, LOOKING FOR FOR, MISSING FOR", tempToken.lineNum);
+		ParsingError tempError("FATAL ERROR, LOOKING FOR FOR, MISSING FOR", tempToken.lineNum, tempToken.t_string);
 		ResultOfParse.push_back(tempError);
 	}
 }
@@ -666,7 +677,7 @@ void Parser::Return() {
 	}
 	else {
 		// ERROR, NO RETURN FOUND
-		ParsingError tempError("FATAL ERROR, NO RETURN FOUND", tempToken.lineNum);
+		ParsingError tempError("FATAL ERROR, NO RETURN FOUND", tempToken.lineNum, tempToken.t_string);
 		ResultOfParse.push_back(tempError);
 	}
 }
