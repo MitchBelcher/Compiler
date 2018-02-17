@@ -1,16 +1,217 @@
 #include "SymTable.h"
+#include "Errors.h"
 
-Symbol* SymTable::getSymbol(std::string idString) {
-	// Look at scope first
+using namespace std;
 
-	// Look at global
+SymTable::SymTable() {
+	Symbol reserveSymbol;
+	reserveSymbol.isGlobal = true;
 
-	// Return symbol if it was in one of those
-	return new Symbol;
+	/*reserveSymbol.id = "program";
+	reserveSymbol.tempTokenType = PROGRAM;
+	addSymbol(reserveSymbol.id, reserveSymbol, true);
+
+	reserveSymbol.id = "begin";
+	reserveSymbol.tempTokenType = BEGIN;
+	addSymbol(reserveSymbol.id, reserveSymbol, true);
+
+	reserveSymbol.id = "end";
+	reserveSymbol.tempTokenType = END;
+	addSymbol(reserveSymbol.id, reserveSymbol, true);
+
+	reserveSymbol.id = "global";
+	reserveSymbol.tempTokenType = GLOBAL;
+	addSymbol(reserveSymbol.id, reserveSymbol, true);
+
+	reserveSymbol.id = "procedure";
+	reserveSymbol.tempTokenType = PROCEDURE;
+	addSymbol(reserveSymbol.id, reserveSymbol, true);
+
+	reserveSymbol.id = "parenbegin";
+	reserveSymbol.tempTokenType = PARENBEGIN;
+	addSymbol(reserveSymbol.id, reserveSymbol, true);
+
+	reserveSymbol.id = "parenend";
+	reserveSymbol.tempTokenType = PARENEND;
+	addSymbol(reserveSymbol.id, reserveSymbol, true);
+
+	reserveSymbol.id = "is";
+	reserveSymbol.tempTokenType = IS;
+	addSymbol(reserveSymbol.id, reserveSymbol, true);
+
+	reserveSymbol.id = "semicolon";
+	reserveSymbol.tempTokenType = SEMICOLON;
+	addSymbol(reserveSymbol.id, reserveSymbol, true);
+
+	reserveSymbol.id = "comma";
+	reserveSymbol.tempTokenType = COMMA;
+	addSymbol(reserveSymbol.id, reserveSymbol, true);
+
+	reserveSymbol.id = "colon";
+	reserveSymbol.tempTokenType = COLON;
+	addSymbol(reserveSymbol.id, reserveSymbol, true);
+
+	reserveSymbol.id = "in";
+	reserveSymbol.tempTokenType = IN;
+	addSymbol(reserveSymbol.id, reserveSymbol, true);
+
+	reserveSymbol.id = "out";
+	reserveSymbol.tempTokenType = OUT;
+	addSymbol(reserveSymbol.id, reserveSymbol, true);
+
+	reserveSymbol.id = "inout";
+	reserveSymbol.tempTokenType = INOUT;
+	addSymbol(reserveSymbol.id, reserveSymbol, true);
+
+	reserveSymbol.id = "brackbegin";
+	reserveSymbol.tempTokenType = BRACKBEGIN;
+	addSymbol(reserveSymbol.id, reserveSymbol, true);
+
+	reserveSymbol.id = "brackend";
+	reserveSymbol.tempTokenType = BRACKEND;
+	addSymbol(reserveSymbol.id, reserveSymbol, true);
+
+	reserveSymbol.id = "and";
+	reserveSymbol.tempTokenType = AND;
+	addSymbol(reserveSymbol.id, reserveSymbol, true);
+
+	reserveSymbol.id = "or";
+	reserveSymbol.tempTokenType = OR;
+	addSymbol(reserveSymbol.id, reserveSymbol, true);
+
+	reserveSymbol.id = "not";
+	reserveSymbol.tempTokenType = NOT;
+	addSymbol(reserveSymbol.id, reserveSymbol, true);
+
+	reserveSymbol.id = "if";
+	reserveSymbol.tempTokenType = IF;
+	addSymbol(reserveSymbol.id, reserveSymbol, true);
+
+	reserveSymbol.id = "then";
+	reserveSymbol.tempTokenType = THEN;
+	addSymbol(reserveSymbol.id, reserveSymbol, true);
+
+	reserveSymbol.id = "else";
+	reserveSymbol.tempTokenType = ELSE;
+	addSymbol(reserveSymbol.id, reserveSymbol, true);
+
+	reserveSymbol.id = "for";
+	reserveSymbol.tempTokenType = FOR;
+	addSymbol(reserveSymbol.id, reserveSymbol, true);
+
+	reserveSymbol.id = "semiequal";
+	reserveSymbol.tempTokenType = SEMIEQUAL;
+	addSymbol(reserveSymbol.id, reserveSymbol, true);
+
+	reserveSymbol.id = "add";
+	reserveSymbol.tempTokenType = THEN;
+	addSymbol(reserveSymbol.id, reserveSymbol, true);
+
+	reserveSymbol.id = "else";
+	reserveSymbol.tempTokenType = ELSE;
+	addSymbol(reserveSymbol.id, reserveSymbol, true);
+
+	reserveSymbol.id = "for";
+	reserveSymbol.tempTokenType = FOR;
+	addSymbol(reserveSymbol.id, reserveSymbol, true);
+
+	reserveSymbol.id = "semiequal";
+	reserveSymbol.tempTokenType = SEMIEQUAL;
+	addSymbol(reserveSymbol.id, reserveSymbol, true);*/
+
+	/*
+	
+	PROGRAM,
+	BEGIN, END,
+	GLOBAL,
+	PROCEDURE,
+	PARENBEGIN, PARENEND,
+	IS,
+	SEMICOLON, COMMA, COLON,
+	IN, OUT, INOUT,
+	BRACKBEGIN, BRACKEND,
+	AND, OR, NOT,
+	IF, THEN, ELSE, FOR,
+	SEMIEQUAL,
+	ADD, SUB, MULT, DIVIDE,
+	GREAT, LESS, GREATEQ, LESSEQ,
+	EQUALS, NOTEQUAL, DOUBLEEQUAL,
+	TRUE, FALSE,
+	RETURN,
+	IDENTIFIER,
+	STRING, VALSTRING,
+	BOOL, VALBOOL,
+	CHAR, VALCHAR,
+	FLOAT, VALFLOAT,
+	INTEGER, VALINT,
+	INVALID,
+	COMMENT,
+	FILEEND, STREAMEND
+
+	*/
+}
+
+Symbol* SymTable::getSymbol(string id, bool onlyGlobal) {
+
+	Symbol* symbolOut = nullptr;
+
+	if (!Scopes.empty() && onlyGlobal == false) {
+		auto iter = Scopes[Scopes.size() - 1].find(id);
+		if (iter != Scopes[Scopes.size() - 1].end()) {
+			symbolOut = &(iter->second);
+		}
+	}
+
+	if (symbolOut == nullptr) {
+		auto iter = GlobalTable.find(id);
+		if (iter != GlobalTable.end()) {
+			symbolOut = &(iter->second);
+		}
+	}
+	
+	return symbolOut;
 }
 
 
-void SymTable::addSymbol(std::string idString, Symbol symbolToAdd, bool isGlobal)
-{
-	// add symbol to table
+Symbol* SymTable::addSymbol(string id, Symbol symbolIn, bool isGlobal) {
+
+	if (isGlobal) {
+		GlobalTable.insert({ id, symbolIn });
+
+		auto iter = GlobalTable.find(id);
+		if (iter != GlobalTable.end()) {
+			return &(iter->second);
+		}
+		else {
+			// ERROR, UNABLE TO ADD TO GLOBAL TABLE
+			SymbolError tempError("ERROR, UNABLE TO ADD SYMBOL TO TREE", symbolIn.id);
+			ResultOfSymbol.push_back(tempError);
+		}
+	}
+	else {
+		if (!Scopes.empty()) {
+			Scopes[Scopes.size() - 1].insert({ id, symbolIn });
+
+			auto iter = Scopes[Scopes.size() - 1].find(id);
+			if (iter != Scopes[Scopes.size() - 1].end()) {
+				return &(iter->second);
+			}
+			else {
+				// ERROR, UNABLE TO ADD TO LOCAL SCOPE
+			}
+		}
+		else {
+			GlobalTable.insert({ id, symbolIn });
+			// THROW WARNING, ADDED TO GLOBAL BY DEFAULT SINCE NO OPEN SCOPE(S)
+		}
+	}
+	return nullptr;
+}
+
+void SymTable::OpenScope() {
+	Scopes.push_back(HashTable());
+}
+
+void SymTable::CloseScope() {
+	Scopes.pop_back();
 }

@@ -9,15 +9,22 @@ An instance of Scanner, a temporary token for parsing, as well as declarations f
 
 #include "Scanner.h"
 
+struct symInfo {
+	bool isCorrect = true;
+	SYMBOL_TYPES p_type;
+	token p_token;
+};
+
 class Parser {
 public:
-	Parser(const char* filePath);
+	Parser(const char* filePath, SymTable& newSymbolTable);
 	void parseFile();
 
 	Scanner inputScanner;
 
 private:
 	token tempToken;
+	SymTable* symbolTable;
 
 	void Program();
 	void ProgramHead();

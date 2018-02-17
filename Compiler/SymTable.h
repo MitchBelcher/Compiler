@@ -12,20 +12,23 @@ This header file contains the base Symbol Table class, and creates a hash table 
 
 #include "Token.h"
 
+using namespace std;
 
-typedef std::unordered_map<std::string, Symbol> HashTable;
+typedef unordered_map<string, Symbol> HashTable;
 
 class SymTable
 {
 public:
+	SymTable();
 
-	Symbol * getSymbol(std::string idString);
-	void addSymbol(std::string idString, Symbol symbolToAdd, bool isGlobal);
+	Symbol* getSymbol(string id, bool onlyGlobal = false);
+	Symbol* addSymbol(string id, Symbol symbolIn, bool isGlobal);
 
 	void OpenScope();
 	void CloseScope();
 
 private:
-	HashTable GlobalSymbolTable;
-	std::stack<HashTable> SymbolTableList;
+	HashTable GlobalTable;
+	vector<HashTable> Scopes;
+	int currentDepth = 0;
 };

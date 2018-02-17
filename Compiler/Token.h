@@ -41,30 +41,32 @@ enum TYPES {
 	FILEEND, STREAMEND
 };
 
-enum SYMBOL_TYPE
-{
-	UNASSIGNED = 1 << 0,
-	/*INTEGER = 1 << 1,
-	FLOAT = 1 << 2,
-	BOOL = 1 << 3,
-	STRING = 1 << 4,
-	CHAR = 1 << 5,
-	PROC = 1 << 6,
-	ARRAY = 1 << 7*/
+enum SYMBOL_TYPES {
+	UNASSIGNED,
+	SYMINTEGER,
+	SYMFLOAT,
+	SYMBOOL,
+	SYMSTRING,
+	SYMCHAR,
+	PROC,
+	ARRAY
 };
 
-struct Symbol
-{
-	TYPES tempTokenType;
-	int tempSymType = SYMBOL_TYPE::UNASSIGNED;
+struct Symbol {
+	TYPES tempTokenType = IDENTIFIER;
+	SYMBOL_TYPES tempSymbolType = UNASSIGNED;
+	bool isArray = false;
+	int arrayUpper;
+	int arrayLower;
 	string id;
-	bool global;
+	bool isGlobal;
 };
 
 // Structure to determine types in a token
 struct token {
 
 	TYPES t_type;
+	Symbol* t_symbol;
 
 	bool t_bool;
 	int t_int;

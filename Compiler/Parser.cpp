@@ -8,8 +8,9 @@ This cpp file contains the definition for Parser class functions, each going thr
 #include "Errors.h"
 
 // Main parser constructor, which calls the constructor for the scanner instance
-Parser::Parser(const char* filePath) {
-	inputScanner.init(filePath);
+Parser::Parser(const char* filePath, SymTable& newSymbolTable) {
+	inputScanner.init(filePath, newSymbolTable);
+	symbolTable = &newSymbolTable;
 }
 
 // Begin parsing the file by scanning the first token, and then running the program procedures

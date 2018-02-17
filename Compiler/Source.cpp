@@ -8,6 +8,7 @@ This cpp file contains the main entry point to the compiler program, setting the
 #include "Token.h"
 #include "Scanner.h"
 #include "Parser.h"
+#include "SymTable.h"
 
 #include <vector>
 #include <iostream>
@@ -23,10 +24,20 @@ int main(int argc, char *argv[]) {
 	//const char* filePath = "C://Users//guita//Documents//Compiler//testPgms//correct//test_program_minimal.src"; // Filepath to read
 	const char* filePath = "..//testPgms//correct//test1b.src"; // Filepath to read
 
-	Parser fileParse(filePath);
+	SymTable symbolTable;
+
+	Parser fileParse(filePath, symbolTable);
 	fileParse.parseFile();
 
 	//Scanner inputScanner; // Create Scanner instance
+
+	//symbolTable.OpenScope();
+
+	//symbolTable.CloseScope();
+
+	//symbolTable.OpenScope();
+
+	//symbolTable.OpenScope();
 
 	// Print out scanner errors
 	for (int i = 0; i < ResultOfScan.size(); i++) {
@@ -41,6 +52,13 @@ int main(int argc, char *argv[]) {
 		cout << "Line #: " << ResultOfParse[i].lineNumber << '\t' << "-- " << ResultOfParse[i].parseError << " --" << '\t' << "-- Error found at/near string: " << ResultOfParse[i].tokenName << endl;
 	}
 	if (ResultOfParse.size() == 0) {
+		cout << "No parse errors found!" << endl;
+	}
+
+	for (int i = 0; i < ResultOfSymbol.size(); i++) {
+		cout << ResultOfSymbol[i].symbolError << " --" << '\t' << "-- Error found at/near string: " << ResultOfSymbol[i].id << endl;
+	}
+	if (ResultOfSymbol.size() == 0) {
 		cout << "No parse errors found!" << endl;
 	}
 

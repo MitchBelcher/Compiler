@@ -538,7 +538,7 @@ token Scanner::tokenScan() {
 }
 
 // Scanner initialization constructor, takes a filepath, and opens the stream for that path
-void Scanner::init(const char* filePath) {
+void Scanner::init(const char* filePath, SymTable& newSymbolTable) {
 
 	errno_t error = fopen_s(&tempStream, filePath, "r"); // Open read-only filestream with specified file path
 
@@ -546,6 +546,8 @@ void Scanner::init(const char* filePath) {
 	if (error != 0) {
 		// File cannot be read
 	}
+
+	symbolTable = &newSymbolTable;
 }
 
 // Scanner deconstructor, closes the stream

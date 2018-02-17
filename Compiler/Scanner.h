@@ -9,12 +9,13 @@ A function to check if a given string is a reserve word, and a temporary filestr
 #pragma once
 
 #include "Token.h"
+#include "SymTable.h"
 
 #include <vector>
 
 class Scanner {
 public:
-	void init (const char* filePath); // Constructor (pass filepath)
+	void init (const char* filePath, SymTable& newSymbolTable); // Constructor (pass filepath)
 	~Scanner(); // Destructor
 
 	//void scanIn (const char* filePath);
@@ -26,4 +27,5 @@ private:
 	//token tokenScan (FILE* stream);
 	vector<token> tempTokenList; // Temporary token vector
 	FILE* tempStream; // Temporary input filestream
+	SymTable* symbolTable;
 };
