@@ -8,6 +8,7 @@ As well as the base token structure that contains the elements that make up a to
 #pragma once
 
 #include <string>
+#include <utility>
 
 using namespace std;
 
@@ -38,7 +39,13 @@ enum TYPES {
 	INTEGER, VALINT,
 	INVALID,
 	COMMENT,
-	FILEEND, STREAMEND
+	FILEEND, STREAMEND,
+	GETBOOL, GETINTEGER, GETFLOAT, GETSTRING, GETCHAR,
+	PUTBOOL, PUTINTEGER, PUTFLOAT, PUTSTRING, PUTCHAR
+};
+
+enum PARAM_TYPES {
+	INTYPE, OUTTYPE, INOUTTYPE
 };
 
 enum SYMBOL_TYPES {
@@ -60,6 +67,7 @@ struct Symbol {
 	int arrayLower;
 	string id;
 	bool isGlobal;
+	vector<pair<Symbol*, PARAM_TYPES>> procedureParameters;
 };
 
 // Structure to determine types in a token

@@ -19,94 +19,134 @@ vector<token> Scanner::getTokens() {
 }
 
 // Function to check if input reference token is one of a number of reserve words versus a simple identifier
-void Scanner::checkForReserves(token &tempToken) {
-
-		if (tempToken.t_string.compare("program") == 0) {
-			tempToken.t_type = PROGRAM;
-		}
-
-		if (tempToken.t_string.compare("begin") == 0) {
-			tempToken.t_type = BEGIN;
-		}
-
-		if (tempToken.t_string.compare("end") == 0) {
-			tempToken.t_type = END;
-		}
-
-		if (tempToken.t_string.compare("global") == 0) {
-			tempToken.t_type = GLOBAL;
-		}
-		
-		if (tempToken.t_string.compare("procedure") == 0) {
-			tempToken.t_type = PROCEDURE;
-		}
-
-		if (tempToken.t_string.compare("in") == 0) {
-			tempToken.t_type = IN;
-		}
-
-		if (tempToken.t_string.compare("out") == 0) {
-			tempToken.t_type = OUT;
-		}
-
-		if (tempToken.t_string.compare("inout") == 0) {
-			tempToken.t_type = INOUT;
-		}
-
-		if (tempToken.t_string.compare("float") == 0) {
-			tempToken.t_type = FLOAT;
-		}
-
-		if (tempToken.t_string.compare("bool") == 0) {
-			tempToken.t_type = BOOL;
-		}
-
-		if (tempToken.t_string.compare("char") == 0) {
-			tempToken.t_type = CHAR;
-		}
-
-		if (tempToken.t_string.compare("if") == 0) {
-			tempToken.t_type = IF;
-		}
-
-		if (tempToken.t_string.compare("then") == 0) {
-			tempToken.t_type = THEN;
-		}
-
-		if (tempToken.t_string.compare("else") == 0) {
-			tempToken.t_type = ELSE;
-		}
-
-		if (tempToken.t_string.compare("for") == 0) {
-			tempToken.t_type = FOR;
-		}
-
-		if (tempToken.t_string.compare("return") == 0) {
-			tempToken.t_type = RETURN;
-		}
-
-		if (tempToken.t_string.compare("string") == 0) {
-			tempToken.t_type = STRING;
-		}
-
-		if (tempToken.t_string.compare("integer") == 0) {
-			tempToken.t_type = INTEGER;
-		}
-
-		if (tempToken.t_string.compare("true") == 0) {
-			tempToken.t_type = TRUE;
-			tempToken.t_bool = true;
-		}
-
-		if (tempToken.t_string.compare("false") == 0) {
-			tempToken.t_type = FALSE;
-			tempToken.t_bool = false;
-		}
-
-		if (tempToken.t_string.compare("is") == 0) {
-			tempToken.t_type = IS;
-		}
-}
+//void Scanner::checkForReserves(token &tempToken) {
+//
+//		if (tempToken.t_string.compare("program") == 0) {
+//			tempToken.t_type = PROGRAM;
+//		}
+//
+//		if (tempToken.t_string.compare("begin") == 0) {
+//			tempToken.t_type = BEGIN;
+//		}
+//
+//		if (tempToken.t_string.compare("end") == 0) {
+//			tempToken.t_type = END;
+//		}
+//
+//		if (tempToken.t_string.compare("global") == 0) {
+//			tempToken.t_type = GLOBAL;
+//		}
+//		
+//		if (tempToken.t_string.compare("procedure") == 0) {
+//			tempToken.t_type = PROCEDURE;
+//		}
+//
+//		if (tempToken.t_string.compare("in") == 0) {
+//			tempToken.t_type = IN;
+//		}
+//
+//		if (tempToken.t_string.compare("out") == 0) {
+//			tempToken.t_type = OUT;
+//		}
+//
+//		if (tempToken.t_string.compare("inout") == 0) {
+//			tempToken.t_type = INOUT;
+//		}
+//
+//		if (tempToken.t_string.compare("float") == 0) {
+//			tempToken.t_type = FLOAT;
+//		}
+//
+//		if (tempToken.t_string.compare("bool") == 0) {
+//			tempToken.t_type = BOOL;
+//		}
+//
+//		if (tempToken.t_string.compare("char") == 0) {
+//			tempToken.t_type = CHAR;
+//		}
+//
+//		if (tempToken.t_string.compare("if") == 0) {
+//			tempToken.t_type = IF;
+//		}
+//
+//		if (tempToken.t_string.compare("then") == 0) {
+//			tempToken.t_type = THEN;
+//		}
+//
+//		if (tempToken.t_string.compare("else") == 0) {
+//			tempToken.t_type = ELSE;
+//		}
+//
+//		if (tempToken.t_string.compare("for") == 0) {
+//			tempToken.t_type = FOR;
+//		}
+//
+//		if (tempToken.t_string.compare("return") == 0) {
+//			tempToken.t_type = RETURN;
+//		}
+//
+//		if (tempToken.t_string.compare("string") == 0) {
+//			tempToken.t_type = STRING;
+//		}
+//
+//		if (tempToken.t_string.compare("integer") == 0) {
+//			tempToken.t_type = INTEGER;
+//		}
+//
+//		if (tempToken.t_string.compare("true") == 0) {
+//			tempToken.t_type = TRUE;
+//			tempToken.t_bool = true;
+//		}
+//
+//		if (tempToken.t_string.compare("false") == 0) {
+//			tempToken.t_type = FALSE;
+//			tempToken.t_bool = false;
+//		}
+//
+//		if (tempToken.t_string.compare("is") == 0) {
+//			tempToken.t_type = IS;
+//		}
+//
+//		if (tempToken.t_string.compare("getbool") == 0) {
+//			tempToken.t_type = GETBOOL;
+//		}
+//
+//		if (tempToken.t_string.compare("getinteger") == 0) {
+//			tempToken.t_type = GETINTEGER;
+//		}
+//
+//		if (tempToken.t_string.compare("getfloat") == 0) {
+//			tempToken.t_type = GETFLOAT;
+//		}
+//
+//		if (tempToken.t_string.compare("getstring") == 0) {
+//			tempToken.t_type = GETSTRING;
+//		}
+//
+//		if (tempToken.t_string.compare("getchar") == 0) {
+//			tempToken.t_type = GETCHAR;
+//		}
+//
+//		if (tempToken.t_string.compare("putbool") == 0) {
+//			tempToken.t_type = PUTBOOL;
+//		}
+//
+//		if (tempToken.t_string.compare("putinteger") == 0) {
+//			tempToken.t_type = PUTINTEGER;
+//		}
+//
+//		if (tempToken.t_string.compare("putfloat") == 0) {
+//			tempToken.t_type = PUTFLOAT;
+//		}
+//
+//		if (tempToken.t_string.compare("putstring") == 0) {
+//			tempToken.t_type = PUTSTRING;
+//		}
+//
+//		if (tempToken.t_string.compare("putchar") == 0) {
+//			tempToken.t_type = PUTCHAR;
+//		}
+//}
 
 // Function to systematically scan characters to create a final token
 token Scanner::tokenScan() {
@@ -170,7 +210,17 @@ token Scanner::tokenScan() {
 		}
 		ungetc(nextChar, tempStream); // Put invalid character back on the tempStream
 
-		checkForReserves(tempToken); // Check to see if the token was a reserve word, if it wasn't no change is made
+		//checkForReserves(tempToken); // Check to see if the token was a reserve word, if it wasn't no change is made
+
+		tempToken.t_symbol = symbolTable->getSymbol(tempToken.t_string);
+		if (tempToken.t_symbol == nullptr) {
+			Symbol newSymbol;
+			newSymbol.tempTokenType = tempToken.t_type;
+			newSymbol.id = tempToken.t_string;
+			newSymbol.isGlobal = false;
+			tempToken.t_symbol = symbolTable->addSymbol(newSymbol.id, newSymbol, newSymbol.isGlobal);
+		}
+		tempToken.t_type = tempToken.t_symbol->tempTokenType;
 	}
 
 	// Characters

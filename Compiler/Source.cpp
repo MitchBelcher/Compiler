@@ -17,11 +17,11 @@ using namespace std;
 
 vector<ParsingError> ResultOfParse = {};
 vector<ScannerError> ResultOfScan = {};
+vector<SymbolError> ResultOfSymbol = {};
 
 // Main
 int main(int argc, char *argv[]) {
 
-	//const char* filePath = "C://Users//guita//Documents//Compiler//testPgms//correct//test_program_minimal.src"; // Filepath to read
 	const char* filePath = "..//testPgms//correct//test1b.src"; // Filepath to read
 
 	SymTable symbolTable;
@@ -29,15 +29,9 @@ int main(int argc, char *argv[]) {
 	Parser fileParse(filePath, symbolTable);
 	fileParse.parseFile();
 
-	//Scanner inputScanner; // Create Scanner instance
-
 	//symbolTable.OpenScope();
 
 	//symbolTable.CloseScope();
-
-	//symbolTable.OpenScope();
-
-	//symbolTable.OpenScope();
 
 	// Print out scanner errors
 	for (int i = 0; i < ResultOfScan.size(); i++) {
@@ -55,18 +49,11 @@ int main(int argc, char *argv[]) {
 		cout << "No parse errors found!" << endl;
 	}
 
+	// Print out symbol errors
 	for (int i = 0; i < ResultOfSymbol.size(); i++) {
-		cout << ResultOfSymbol[i].symbolError << " --" << '\t' << "-- Error found at/near string: " << ResultOfSymbol[i].id << endl;
+		cout << ResultOfSymbol[i].symbolError << " --" << '\t' << "-- Error found at/near string: " << ResultOfSymbol[i].idString << endl;
 	}
 	if (ResultOfSymbol.size() == 0) {
 		cout << "No parse errors found!" << endl;
 	}
-
-	//inputScanner.scanIn(filePath);
-
-	//vector<token> tokens = inputScanner.getTokens();
-
-	//for (int i = 0; i < tokens.size(); i++) {
-	//	cout << tokens[i].t_type << endl;
-	//}
 }

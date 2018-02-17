@@ -9,10 +9,12 @@ An instance of Scanner, a temporary token for parsing, as well as declarations f
 
 #include "Scanner.h"
 
-struct symInfo {
-	bool isCorrect = true;
-	SYMBOL_TYPES p_type;
-	token p_token;
+#include <vector>
+
+struct DataStore {
+	token tempToken;
+	SYMBOL_TYPES tempType;
+	vector<Symbol*> procedureParamters;
 };
 
 class Parser {
@@ -26,35 +28,35 @@ private:
 	token tempToken;
 	SymTable* symbolTable;
 
-	void Program();
-	void ProgramHead();
-	void ProgramBody();
-	void Declare();
-	void Statement();
-	void ProcDeclare();
-	void VarDeclare();
-	void ProcHead();
-	void ProcBody();
-	void ParamList();
-	void Param();
-	void TypeMark();
-	void Assign();
-	void If();
-	void Loop();
-	void Return();
-	void AssignState();
-	void ArgumentList();
+	DataStore Program();
+	DataStore ProgramHead();
+	DataStore ProgramBody();
+	DataStore Declare();
+	DataStore Statement();
+	DataStore ProcDeclare(bool isGlobal);
+	DataStore VarDeclare(bool isGlobal);
+	DataStore ProcHead(bool isGlobal);
+	DataStore ProcBody();
+	DataStore ParamList();
+	DataStore Param();
+	DataStore TypeMark();
+	DataStore Assign();
+	DataStore If();
+	DataStore Loop();
+	DataStore Return();
+	DataStore AssignState();
+	DataStore ArgumentList();
 
-	void Expr();
-	void ExprPrime();
-	void Arith();
-	void ArithPrime();
-	void Relat();
-	void RelatPrime();
-	void Term();
-	void TermPrime();
-	void Factor();
-	void Name();
-	void Number();
-	void Ident();
+	DataStore Expr();
+	DataStore ExprPrime();
+	DataStore Arith();
+	DataStore ArithPrime();
+	DataStore Relat();
+	DataStore RelatPrime();
+	DataStore Term();
+	DataStore TermPrime();
+	DataStore Factor();
+	DataStore Name();
+	DataStore Number();
+	DataStore Ident();
 };

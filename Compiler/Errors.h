@@ -22,9 +22,9 @@ struct ScannerError {
 
 struct SymbolError {
 	string symbolError;
-	string id;
+	string idString;
 
-	SymbolError(string errorString, string id) : symbolError(errorString), id(id) {}
+	SymbolError(string errorString, string id) : symbolError(errorString), idString(id) {}
 };
 
 extern vector<ParsingError> ResultOfParse;

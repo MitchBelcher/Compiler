@@ -7,7 +7,7 @@ SymTable::SymTable() {
 	Symbol reserveSymbol;
 	reserveSymbol.isGlobal = true;
 
-	/*reserveSymbol.id = "program";
+	reserveSymbol.id = "program";
 	reserveSymbol.tempTokenType = PROGRAM;
 	addSymbol(reserveSymbol.id, reserveSymbol, true);
 
@@ -27,28 +27,8 @@ SymTable::SymTable() {
 	reserveSymbol.tempTokenType = PROCEDURE;
 	addSymbol(reserveSymbol.id, reserveSymbol, true);
 
-	reserveSymbol.id = "parenbegin";
-	reserveSymbol.tempTokenType = PARENBEGIN;
-	addSymbol(reserveSymbol.id, reserveSymbol, true);
-
-	reserveSymbol.id = "parenend";
-	reserveSymbol.tempTokenType = PARENEND;
-	addSymbol(reserveSymbol.id, reserveSymbol, true);
-
 	reserveSymbol.id = "is";
 	reserveSymbol.tempTokenType = IS;
-	addSymbol(reserveSymbol.id, reserveSymbol, true);
-
-	reserveSymbol.id = "semicolon";
-	reserveSymbol.tempTokenType = SEMICOLON;
-	addSymbol(reserveSymbol.id, reserveSymbol, true);
-
-	reserveSymbol.id = "comma";
-	reserveSymbol.tempTokenType = COMMA;
-	addSymbol(reserveSymbol.id, reserveSymbol, true);
-
-	reserveSymbol.id = "colon";
-	reserveSymbol.tempTokenType = COLON;
 	addSymbol(reserveSymbol.id, reserveSymbol, true);
 
 	reserveSymbol.id = "in";
@@ -61,22 +41,6 @@ SymTable::SymTable() {
 
 	reserveSymbol.id = "inout";
 	reserveSymbol.tempTokenType = INOUT;
-	addSymbol(reserveSymbol.id, reserveSymbol, true);
-
-	reserveSymbol.id = "brackbegin";
-	reserveSymbol.tempTokenType = BRACKBEGIN;
-	addSymbol(reserveSymbol.id, reserveSymbol, true);
-
-	reserveSymbol.id = "brackend";
-	reserveSymbol.tempTokenType = BRACKEND;
-	addSymbol(reserveSymbol.id, reserveSymbol, true);
-
-	reserveSymbol.id = "and";
-	reserveSymbol.tempTokenType = AND;
-	addSymbol(reserveSymbol.id, reserveSymbol, true);
-
-	reserveSymbol.id = "or";
-	reserveSymbol.tempTokenType = OR;
 	addSymbol(reserveSymbol.id, reserveSymbol, true);
 
 	reserveSymbol.id = "not";
@@ -98,26 +62,6 @@ SymTable::SymTable() {
 	reserveSymbol.id = "for";
 	reserveSymbol.tempTokenType = FOR;
 	addSymbol(reserveSymbol.id, reserveSymbol, true);
-
-	reserveSymbol.id = "semiequal";
-	reserveSymbol.tempTokenType = SEMIEQUAL;
-	addSymbol(reserveSymbol.id, reserveSymbol, true);
-
-	reserveSymbol.id = "add";
-	reserveSymbol.tempTokenType = THEN;
-	addSymbol(reserveSymbol.id, reserveSymbol, true);
-
-	reserveSymbol.id = "else";
-	reserveSymbol.tempTokenType = ELSE;
-	addSymbol(reserveSymbol.id, reserveSymbol, true);
-
-	reserveSymbol.id = "for";
-	reserveSymbol.tempTokenType = FOR;
-	addSymbol(reserveSymbol.id, reserveSymbol, true);
-
-	reserveSymbol.id = "semiequal";
-	reserveSymbol.tempTokenType = SEMIEQUAL;
-	addSymbol(reserveSymbol.id, reserveSymbol, true);*/
 
 	/*
 	
@@ -184,7 +128,7 @@ Symbol* SymTable::addSymbol(string id, Symbol symbolIn, bool isGlobal) {
 		}
 		else {
 			// ERROR, UNABLE TO ADD TO GLOBAL TABLE
-			SymbolError tempError("ERROR, UNABLE TO ADD SYMBOL TO TREE", symbolIn.id);
+			SymbolError tempError("ERROR, UNABLE TO ADD SYMBOL TO GLOBAL TABLE", symbolIn.id);
 			ResultOfSymbol.push_back(tempError);
 		}
 	}
@@ -198,11 +142,15 @@ Symbol* SymTable::addSymbol(string id, Symbol symbolIn, bool isGlobal) {
 			}
 			else {
 				// ERROR, UNABLE TO ADD TO LOCAL SCOPE
+				SymbolError tempError("ERROR, UNABLE TO ADD SYMBOL TO LOCAL SCOPE", symbolIn.id);
+				ResultOfSymbol.push_back(tempError);
 			}
 		}
 		else {
 			GlobalTable.insert({ id, symbolIn });
 			// THROW WARNING, ADDED TO GLOBAL BY DEFAULT SINCE NO OPEN SCOPE(S)
+			SymbolError tempError("WARNING, ASSUMED VALUE WAS MEANT TO BE ADDED TO GLOBAL", symbolIn.id);
+			ResultOfSymbol.push_back(tempError);
 		}
 	}
 	return nullptr;

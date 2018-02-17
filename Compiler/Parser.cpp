@@ -30,12 +30,16 @@ void Parser::parseFile() {
 }
 
 // Program
-void Parser::Program() {
+DataStore Parser::Program() {
+
+	DataStore programData;
 
 	// If the first token is the program reserve word, we can proceed
 	if (tempToken.t_type == PROGRAM) {
 		ProgramHead(); // Run program header procedure
 		ProgramBody(); // Rune program body procedure
+
+		symbolTable->CloseScope();
 
 		if (tempToken.t_type != FILEEND) {
 			// ERROR, MISSING FILE END
@@ -48,13 +52,17 @@ void Parser::Program() {
 		ParsingError tempError("PARSE ERROR, MISSING 'PROGRAM' AT FILE BEGIN", tempToken.lineNum, tempToken.t_string);
 		ResultOfParse.push_back(tempError);
 	}
+	return programData;
 }
 
 // Program Head
-void Parser::ProgramHead() {
+DataStore Parser::ProgramHead() {
+
+	DataStore programHeadData;
 
 	// Check that the token is the program reserve word, ADDED PROGRAM TO TREE
 	if (tempToken.t_type == PROGRAM) {
+		symbolTable->OpenScope();
 		tempToken = inputScanner.tokenScan(); // Get next token
 		Ident(); // Run identifier procedure
 
@@ -68,10 +76,13 @@ void Parser::ProgramHead() {
 			ResultOfParse.push_back(tempError);
 		}
 	}
+	return programHeadData;
 }
 
 // Program Body
-void Parser::ProgramBody() {
+DataStore Parser::ProgramBody() {
+
+	DataStore programBodyData;
 
 	// CHECK FOR DECLARATION
 	// If the token has type of global, procedure, integer, float, bool, string or char
@@ -135,39 +146,48 @@ void Parser::ProgramBody() {
 		ParsingError tempError("PARSE ERROR, MISSING END IN END PROGRAM", tempToken.lineNum, tempToken.t_string);
 		ResultOfParse.push_back(tempError);
 	}
+	return programBodyData;
 }
 
 // Declare
-void Parser::Declare() {
+DataStore Parser::Declare() {
+
+	DataStore declarationData;
+	bool isGlobal = false;
+
 
 	// CHECK FOR GLOBAL
 	if (tempToken.t_type == GLOBAL) {
+		isGlobal = true;
 		tempToken = inputScanner.tokenScan(); // Get next token, ADDED GLOBAL TO TREE
 
 		// CHECK FOR PROCEDURE
 		if (tempToken.t_type == PROCEDURE) {
-			ProcDeclare(); // Run procedure declaration procedure
+			ProcDeclare(isGlobal); // Run procedure declaration procedure
 		}
 
 		// Check if type is a variable
 		else if (tempToken.t_type == INTEGER || tempToken.t_type == CHAR || tempToken.t_type == STRING || tempToken.t_type == FLOAT || tempToken.t_type == BOOL) {
-			VarDeclare(); // Run variable declaration procedure
+			VarDeclare(isGlobal); // Run variable declaration procedure
 		}
 	}
 
 	// CHECK FOR PROCEDURE
 	else if (tempToken.t_type == PROCEDURE) {
-		ProcDeclare(); // Run procedure declaration procedure
+		ProcDeclare(isGlobal); // Run procedure declaration procedure
 	}
 
 	// Check if type is a variable
 	else if (tempToken.t_type == INTEGER || tempToken.t_type == CHAR || tempToken.t_type == STRING || tempToken.t_type == FLOAT || tempToken.t_type == BOOL) {
-		VarDeclare(); // Run variable declaration procedure
+		VarDeclare(isGlobal); // Run variable declaration procedure
 	}
+	return declarationData;
 }
 
 // Statement
-void Parser::Statement() {
+DataStore Parser::Statement() {
+
+	DataStore statementData;
 
 	// Assign statement/Procedure 
 	if (tempToken.t_type == IDENTIFIER) {
@@ -193,31 +213,67 @@ void Parser::Statement() {
 		ParsingError tempError("PARSE ERROR, NO VALID STATEMENT PRESENT", tempToken.lineNum, tempToken.t_string);
 		ResultOfParse.push_back(tempError);
 	}
+	return statementData;
 }
 
 // Procedure Declaration
-void Parser::ProcDeclare() {
-	ProcHead(); // Run procedure head procedure
+DataStore Parser::ProcDeclare(bool isGlobal) {
+	DataStore procedureDeclarationData;
+	ProcHead(isGlobal); // Run procedure head procedure
 	ProcBody(); // Run procedure body procedure
+	symbolTable->CloseScope();
+	return procedureDeclarationData;
 }
 
 // Variable Declaration
-void Parser::VarDeclare() {
-	TypeMark(); // Run type mark procedure
-	Ident(); // Run identifier procedure
+DataStore Parser::VarDeclare(bool isGlobal) {
+	DataStore variableDeclarationData;
+
+	Symbol tempSymbol;
+	tempSymbol.isGlobal = isGlobal;
+	DataStore dataToHandle = TypeMark();
+	tempSymbol.tempSymbolType = dataToHandle.tempType;
+
+	Symbol* newSymbol = nullptr;
+	dataToHandle = Ident();
+	variableDeclarationData.tempToken = dataToHandle.tempToken;
+	tempSymbol.id = variableDeclarationData.tempToken.t_string;
+	newSymbol = variableDeclarationData.tempToken.t_symbol;
 
 	// Check for left bracket
 	if (tempToken.t_type == BRACKBEGIN) {
 		tempToken = inputScanner.tokenScan(); // Get next token, ADDED LEFT BRACKET TO TREE
-		Number(); // Run number procedure
+		dataToHandle = Number(); // Run number procedure
+
+		if (dataToHandle.tempToken.t_type != VALINT) {
+			ParsingError tempError("PARSE ERROR, LOWER ARRAY BOUND MUST BE INT", tempToken.lineNum, tempToken.t_string);
+			ResultOfParse.push_back(tempError);
+		}
+		else {
+			tempSymbol.arrayLower = dataToHandle.tempToken.t_int;
+		}
 
 		// Check for colon
 		if (tempToken.t_type == COLON) {
 			tempToken = inputScanner.tokenScan(); // Get next token, ADDED COLON TO TREE
-			Number(); // Run number procedure
+			dataToHandle = Number(); // Run number procedure
+			if (dataToHandle.tempToken.t_int != VALINT) {
+				ParsingError tempError("PARSE ERROR, UPPER ARRAY BOUND MUST BE INT", tempToken.lineNum, tempToken.t_string);
+				ResultOfParse.push_back(tempError);
+			}
+			else {
+				if (!(tempSymbol.arrayLower < dataToHandle.tempToken.t_int)) {
+					ParsingError tempError("PARSE ERROR, UPPER ARRAY BOUND MUST BE GREATER THAN LOWER", tempToken.lineNum, tempToken.t_string);
+					ResultOfParse.push_back(tempError);
+				}
+				else {
+					tempSymbol.arrayUpper = dataToHandle.tempToken.t_int;
+				}
+			}
 
 			// Check for right bracket
 			if (tempToken.t_type == BRACKEND) {
+				tempSymbol.isArray = true;
 				tempToken = inputScanner.tokenScan(); // Get next token, ADDED RIGHT BRACKET TO TREE
 			}
 			else {
@@ -232,15 +288,57 @@ void Parser::VarDeclare() {
 			ResultOfParse.push_back(tempError);
 		}
 	}
+
+	if (tempSymbol.isGlobal == newSymbol->isGlobal) {
+		if (newSymbol->tempSymbolType == UNASSIGNED) {
+			newSymbol->tempSymbolType = tempSymbol.tempSymbolType;
+			newSymbol->isArray = tempSymbol.isArray;
+			newSymbol->arrayLower = tempSymbol.arrayLower;
+			newSymbol->arrayUpper = tempSymbol.arrayUpper;
+		}
+		else {
+			ParsingError tempError("PARSE ERROR, REDECLARING VARIABLE", tempToken.lineNum, tempToken.t_string);
+			ResultOfParse.push_back(tempError);
+		}
+	}
+	else {
+		if (tempSymbol.isGlobal == false) {
+			variableDeclarationData.tempToken.t_symbol = symbolTable->addSymbol(tempSymbol.id, tempSymbol, tempSymbol.isGlobal);
+		}
+		else {
+			Symbol* checkGlobal = symbolTable->getSymbol(tempSymbol.id, true);
+			if (checkGlobal == nullptr) {
+				variableDeclarationData.tempToken.t_symbol = symbolTable->addSymbol(tempSymbol.id, tempSymbol, tempSymbol.isGlobal);
+			}
+			else {
+				ParsingError tempError("PARSE ERROR, REDECLARING VARIABLE IN GLOBAL SCOPE", tempToken.lineNum, tempToken.t_string);
+				ResultOfParse.push_back(tempError);
+			}
+		}
+	}
+	return variableDeclarationData;
 }
 
 // Procedure Head
-void Parser::ProcHead() {
+DataStore Parser::ProcHead(bool isGlobal) {
 	
+	DataStore procedureHeaderData;
+
 	// Check for PROCEDURE
 	if (tempToken.t_type == PROCEDURE) {
 		tempToken = inputScanner.tokenScan(); // Get next token, ADDED PROCEDURE TO TREE
-		Ident(); // Run identifier procedure
+
+		Symbol tempSymbol;
+		tempSymbol.isGlobal = isGlobal;
+		tempSymbol.tempSymbolType = PROC;
+
+		Symbol* newSymbol = nullptr;
+		DataStore dataToHandle = Ident();
+		procedureHeaderData.tempToken = dataToHandle.tempToken;
+		tempSymbol.id = procedureHeaderData.tempToken.t_string;
+		newSymbol = procedureHeaderData.tempToken.t_symbol;
+
+		symbolTable->OpenScope();
 
 		// Check for left parentheses
 		if (tempToken.t_type == PARENBEGIN) {
@@ -251,7 +349,8 @@ void Parser::ProcHead() {
 				tempToken = inputScanner.tokenScan(); // Get next token, ADDED RIGHT PARENTHESES TO TREE
 			}
 			else {
-				ParamList();
+				DataStore paramListData = ParamList();
+				//tempSymbol.
 
 				if (tempToken.t_type == PARENEND) {
 					tempToken = inputScanner.tokenScan();
@@ -274,7 +373,7 @@ void Parser::ProcHead() {
 }
 
 // Procedure Body
-void Parser::ProcBody() {
+DataStore Parser::ProcBody() {
 
 	// CHECK FOR DECLARATION
 	// If the token has type of global, procedure, integer, float, bool, string or char
@@ -338,7 +437,7 @@ void Parser::ProcBody() {
 }
 
 // Parameter List
-void Parser::ParamList() {
+DataStore Parser::ParamList() {
 	Param(); // Run parameter procedure
 
 	// Check for comma
@@ -349,8 +448,8 @@ void Parser::ParamList() {
 }
 
 // Parameter
-void Parser::Param() {
-	VarDeclare(); // Run variable declaration procedure
+DataStore Parser::Param() {
+	VarDeclare(false); // Run variable declaration procedure
 
 	// Check for IN
 	if (tempToken.t_type == IN) {
@@ -369,7 +468,7 @@ void Parser::Param() {
 }
 
 // Type Mark
-void Parser::TypeMark() {
+DataStore Parser::TypeMark() {
 
 	// Check for INTEGER
 	if (tempToken.t_type == INTEGER) {
@@ -403,7 +502,7 @@ void Parser::TypeMark() {
 }
 
 // Assign
-void Parser::Assign() {
+DataStore Parser::Assign() {
 
 	// Check for IDENTIFIER
 	if (tempToken.t_type == IDENTIFIER) {
@@ -447,7 +546,7 @@ void Parser::Assign() {
 }
 
 // Statement Assignment
-void Parser::AssignState() {
+DataStore Parser::AssignState() {
 
 	// Check for EQUALS
 	if (tempToken.t_type == SEMIEQUAL) {
@@ -462,7 +561,7 @@ void Parser::AssignState() {
 }
 
 // Argument List
-void Parser::ArgumentList() {
+DataStore Parser::ArgumentList() {
 	Expr(); // Run expression procedure
 
 	// Check for COMMA
@@ -473,7 +572,7 @@ void Parser::ArgumentList() {
 }
 
 // If
-void Parser::If() {
+DataStore Parser::If() {
 
 	// Check for IF
 	if (tempToken.t_type == IF) {
@@ -595,7 +694,7 @@ void Parser::If() {
 }
 
 // Loop
-void Parser::Loop() {
+DataStore Parser::Loop() {
 
 	// Check for FOR
 	if (tempToken.t_type == FOR) {
@@ -670,7 +769,7 @@ void Parser::Loop() {
 }
 
 // Return
-void Parser::Return() {
+DataStore Parser::Return() {
 
 	// Check for RETURN
 	if (tempToken.t_type == RETURN) {
@@ -696,12 +795,12 @@ void Parser::Return() {
 
 
 // Identifier
-void Parser::Ident() {
+DataStore Parser::Ident() {
 	tempToken = inputScanner.tokenScan(); // Get next token, ADDED IDENTIFIER TO TREE
 }
 
 // Expression
-void Parser::Expr() {
+DataStore Parser::Expr() {
 
 	// Check for NOT
 	if (tempToken.t_type == NOT) {
@@ -714,7 +813,7 @@ void Parser::Expr() {
 }
 
 // Expression Prime
-void Parser::ExprPrime() {
+DataStore Parser::ExprPrime() {
 
 	// Check for AND
 	if (tempToken.t_type == AND) {
@@ -738,14 +837,14 @@ void Parser::ExprPrime() {
 }
 
 // Arithmetic
-void Parser::Arith() {
+DataStore Parser::Arith() {
 	Relat(); // Run relation procedure
 	ArithPrime(); // Run arithmetic prime procedure
 	return; // Return out of the function
 }
 
 // Arithmetic Prime
-void Parser::ArithPrime() {
+DataStore Parser::ArithPrime() {
 
 	// Check for ADD
 	if (tempToken.t_type == ADD) {
@@ -768,14 +867,14 @@ void Parser::ArithPrime() {
 }
 
 // Relation
-void Parser::Relat() {
+DataStore Parser::Relat() {
 	Term(); // Run term procedure
 	RelatPrime(); // Run relation prime procedure
 	return; // Return out of the function
 }
 
 // Relation Prime
-void Parser::RelatPrime() {
+DataStore Parser::RelatPrime() {
 
 	// Check for LESS
 	if (tempToken.t_type == LESS) {
@@ -830,14 +929,14 @@ void Parser::RelatPrime() {
 }
 
 // Term
-void Parser::Term() {
+DataStore Parser::Term() {
 	Factor(); // Run factor procedure
 	TermPrime(); // Run term prime procedure
 	return; // Return out of the function
 }
 
 // Term Prime
-void Parser::TermPrime() {
+DataStore Parser::TermPrime() {
 
 	// Check for MULT
 	if (tempToken.t_type == MULT) {
@@ -860,7 +959,7 @@ void Parser::TermPrime() {
 }
 
 // Factor
-void Parser::Factor() {
+DataStore Parser::Factor() {
 
 	// Check for left parentheses
 	if (tempToken.t_type == PARENBEGIN) {
@@ -936,7 +1035,7 @@ void Parser::Factor() {
 }
 
 // Name
-void Parser::Name() {
+DataStore Parser::Name() {
 	Ident(); // Run identifier procedure
 
 	// Check for left bracket
@@ -956,6 +1055,6 @@ void Parser::Name() {
 }
 
 // Number
-void Parser::Number() {
+DataStore Parser::Number() {
 	tempToken = inputScanner.tokenScan(); // Get next token, ADDED NUMBER TO TREE
 }
