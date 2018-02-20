@@ -22,7 +22,10 @@ vector<SymbolError> ResultOfSymbol = {};
 // Main
 int main(int argc, char *argv[]) {
 
-	const char* filePath = "..//testPgms//correct//test1b.src"; // Filepath to read
+	const char* filePath = "..//testPgms//correct//test_program_minimal.src"; // Filepath to read
+	//const char* filePath = "C://Users//Guita//Downloads//type_check.src"; // Filepath to read
+
+
 
 	SymTable symbolTable;
 

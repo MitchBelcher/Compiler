@@ -8,6 +8,7 @@ As well as the base token structure that contains the elements that make up a to
 #pragma once
 
 #include <string>
+#include <vector>
 #include <utility>
 
 using namespace std;

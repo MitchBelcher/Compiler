@@ -63,6 +63,40 @@ SymTable::SymTable() {
 	reserveSymbol.tempTokenType = FOR;
 	addSymbol(reserveSymbol.id, reserveSymbol, true);
 
+	reserveSymbol.id = "true";
+	reserveSymbol.tempTokenType = TRUE;
+	addSymbol(reserveSymbol.id, reserveSymbol, true);
+
+	reserveSymbol.id = "false";
+	reserveSymbol.tempTokenType = FALSE;
+	addSymbol(reserveSymbol.id, reserveSymbol, true);
+
+	reserveSymbol.id = "return";
+	reserveSymbol.tempTokenType = RETURN;
+	addSymbol(reserveSymbol.id, reserveSymbol, true);
+
+	reserveSymbol.id = "string";
+	reserveSymbol.tempTokenType = STRING;
+	addSymbol(reserveSymbol.id, reserveSymbol, true);
+
+	reserveSymbol.id = "bool";
+	reserveSymbol.tempTokenType = BOOL;
+	addSymbol(reserveSymbol.id, reserveSymbol, true);
+
+	reserveSymbol.id = "char";
+	reserveSymbol.tempTokenType = CHAR;
+	addSymbol(reserveSymbol.id, reserveSymbol, true);
+
+	reserveSymbol.id = "float";
+	reserveSymbol.tempTokenType = FLOAT;
+	addSymbol(reserveSymbol.id, reserveSymbol, true);
+
+	reserveSymbol.id = "integer";
+	reserveSymbol.tempTokenType = INTEGER;
+	addSymbol(reserveSymbol.id, reserveSymbol, true);
+
+	
+
 	/*
 	
 	PROGRAM,
