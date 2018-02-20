@@ -14,7 +14,7 @@ An instance of Scanner, a temporary token for parsing, as well as declarations f
 struct DataStore {
 	token tempToken;
 	SYMBOL_TYPES tempType;
-	vector<Symbol*> procedureParamters;
+	vector<pair<Symbol*, PARAM_TYPES>> procedureParameters = {};
 };
 
 class Parser {
@@ -40,7 +40,7 @@ private:
 	DataStore ParamList();
 	DataStore Param();
 	DataStore TypeMark();
-	DataStore Assign();
+	DataStore Assign(bool onlyAssign);
 	DataStore If();
 	DataStore Loop();
 	DataStore Return();
