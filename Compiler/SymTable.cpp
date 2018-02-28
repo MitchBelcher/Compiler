@@ -65,10 +65,12 @@ SymTable::SymTable() {
 
 	reserveSymbol.id = "true";
 	reserveSymbol.tempTokenType = TRUE;
+	reserveSymbol.tempSymbolType = SYMBOOL;
 	addSymbol(reserveSymbol.id, reserveSymbol, true);
 
 	reserveSymbol.id = "false";
 	reserveSymbol.tempTokenType = FALSE;
+	reserveSymbol.tempSymbolType = SYMBOOL;
 	addSymbol(reserveSymbol.id, reserveSymbol, true);
 
 	reserveSymbol.id = "return";
@@ -94,39 +96,6 @@ SymTable::SymTable() {
 	reserveSymbol.id = "integer";
 	reserveSymbol.tempTokenType = INTEGER;
 	addSymbol(reserveSymbol.id, reserveSymbol, true);
-
-	
-
-	/*
-	
-	PROGRAM,
-	BEGIN, END,
-	GLOBAL,
-	PROCEDURE,
-	PARENBEGIN, PARENEND,
-	IS,
-	SEMICOLON, COMMA, COLON,
-	IN, OUT, INOUT,
-	BRACKBEGIN, BRACKEND,
-	AND, OR, NOT,
-	IF, THEN, ELSE, FOR,
-	SEMIEQUAL,
-	ADD, SUB, MULT, DIVIDE,
-	GREAT, LESS, GREATEQ, LESSEQ,
-	EQUALS, NOTEQUAL, DOUBLEEQUAL,
-	TRUE, FALSE,
-	RETURN,
-	IDENTIFIER,
-	STRING, VALSTRING,
-	BOOL, VALBOOL,
-	CHAR, VALCHAR,
-	FLOAT, VALFLOAT,
-	INTEGER, VALINT,
-	INVALID,
-	COMMENT,
-	FILEEND, STREAMEND
-
-	*/
 }
 
 Symbol* SymTable::getSymbol(string id, bool onlyGlobal) {
