@@ -168,10 +168,8 @@ Symbol* SymTable::addSymbol(string id, Symbol symbolIn, bool isGlobal) {
 
 void SymTable::OpenScope() {
 	Scopes.push_back(HashTable());
-	//cout << "current scope size: " << Scopes.size() << endl;
 }
 
 void SymTable::CloseScope() {
 	Scopes.pop_back();
-	//cout << "current scope size: " << Scopes.size() << endl;
 }

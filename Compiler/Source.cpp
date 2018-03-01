@@ -22,19 +22,13 @@ vector<SymbolError> ResultOfSymbol = {};
 // Main
 int main(int argc, char *argv[]) {
 
-	const char* filePath = "..//testPgms//correct//test_program_minimal.src"; // Filepath to read
+	const char* filePath = "..//testPgms//correct//test1.src"; // Filepath to read
 	//const char* filePath = "C://Users//Guita//Downloads//type_check.src"; // Filepath to read
-
-
 
 	SymTable symbolTable;
 
 	Parser fileParse(filePath, symbolTable);
 	fileParse.parseFile();
-
-	//symbolTable.OpenScope();
-
-	//symbolTable.CloseScope();
 
 	// Print out scanner errors
 	for (int i = 0; i < ResultOfScan.size(); i++) {

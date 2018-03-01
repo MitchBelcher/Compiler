@@ -82,12 +82,12 @@ token Scanner::tokenScan() {
 
 		tempToken.t_symbol = symbolTable->getSymbol(tempToken.t_string);
 		if (tempToken.t_symbol == nullptr) {
-			Symbol newSymbol;
-			newSymbol.tempTokenType = tempToken.t_type;
-			newSymbol.id = tempToken.t_string;
-			newSymbol.isGlobal = false;
-			//cout << "Adding symbol \t" << newSymbol.id << " with type\t" << newSymbol.tempSymbolType<< '\n';
-			tempToken.t_symbol = symbolTable->addSymbol(newSymbol.id, newSymbol, newSymbol.isGlobal);
+			Symbol returnedSymbol;
+			returnedSymbol.tempTokenType = tempToken.t_type;
+			returnedSymbol.id = tempToken.t_string;
+			returnedSymbol.isGlobal = false;
+			//cout << "Adding symbol \t" << returnedSymbol.id << " with type\t" << returnedSymbol.tempSymbolType<< '\n';
+			tempToken.t_symbol = symbolTable->addSymbol(returnedSymbol.id, returnedSymbol, returnedSymbol.isGlobal);
 		}
 		else
 		{
@@ -242,7 +242,7 @@ token Scanner::tokenScan() {
 
 		tempToken.lineNum = currentLineNumber;
 
-		if (nextChar = '=') {
+		if (nextChar == '=') {
 			tempToken.t_type = SEMIEQUAL;
 			tempToken.t_string += nextChar;
 		}
@@ -449,7 +449,7 @@ token Scanner::tokenScan() {
 }
 
 // Scanner initialization constructor, takes a filepath, and opens the stream for that path
-void Scanner::init(const char* filePath, SymTable& newSymbolTable) {
+void Scanner::init(const char* filePath, SymTable& returnedSymbolTable) {
 
 	errno_t error = fopen_s(&tempStream, filePath, "r"); // Open read-only filestream with specified file path
 
@@ -458,7 +458,7 @@ void Scanner::init(const char* filePath, SymTable& newSymbolTable) {
 		// File cannot be read
 	}
 
-	symbolTable = &newSymbolTable;
+	symbolTable = &returnedSymbolTable;
 }
 
 // Scanner deconstructor, closes the stream

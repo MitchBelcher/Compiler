@@ -5,7 +5,6 @@ PROGRAM grant IS
 	global integer zach;
 
 	procedure if_proc()
-
 		begin
 			if(true) then jake := jake + 1;
 			else zach := zach + RYAN[2];
@@ -13,7 +12,7 @@ PROGRAM grant IS
 	end procedure;
 
 	procedure for_proc()
-                integer i;
+        integer i;
 		begin
 			for(i := 0; i < zach)
 				ryan := zach + i;

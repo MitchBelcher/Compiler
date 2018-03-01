@@ -10,9 +10,9 @@ This cpp file contains the definition for Parser class functions, each going thr
 #include <iostream>
 
 // Main parser constructor, which calls the constructor for the scanner instance
-Parser::Parser(const char* filePath, SymTable& newSymbolTable) {
-	inputScanner.init(filePath, newSymbolTable);
-	symbolTable = &newSymbolTable;
+Parser::Parser(const char* filePath, SymTable& returnedSymbolTable) {
+	inputScanner.init(filePath, returnedSymbolTable);
+	symbolTable = &returnedSymbolTable;
 }
 
 // Begin parsing the file by scanning the first token, and then running the program procedures
@@ -237,11 +237,11 @@ DataStore Parser::VarDeclare(bool isGlobal) {
 	DataStore dataToHandle = TypeMark();
 	tempSymbol.tempSymbolType = dataToHandle.tempType;
 
-	Symbol* newSymbol = nullptr;
+	Symbol* returnedSymbol = nullptr;
 	dataToHandle = Ident();
 	variableDeclarationData.tempToken = dataToHandle.tempToken;
 	tempSymbol.id = variableDeclarationData.tempToken.t_string;
-	newSymbol = variableDeclarationData.tempToken.t_symbol;
+	returnedSymbol = variableDeclarationData.tempToken.t_symbol;
 
 	// Check for left bracket
 	if (tempToken.t_type == BRACKBEGIN) {
@@ -272,7 +272,7 @@ DataStore Parser::VarDeclare(bool isGlobal) {
 				negBound = true;
 			}
 			dataToHandle = Number(); // Run number procedure
-			if (dataToHandle.tempToken.t_int != VALINT) {
+			if (dataToHandle.tempToken.t_type != VALINT) {
 				ParsingError tempError("PARSE ERROR, UPPER ARRAY BOUND MUST BE INT", tempToken.lineNum, tempToken.t_string);
 				ResultOfParse.push_back(tempError);
 			}
@@ -302,17 +302,17 @@ DataStore Parser::VarDeclare(bool isGlobal) {
 		}
 		else {
 			// ERROR, MISSING COLON, VIOLATION OF VARIABLE DECLARATION
-			ParsingError tempError("PARSE ERROR, MISSING ':' IN VARIABLE DECLARATION", tempToken.lineNum, tempToken.t_string);
+			ParsingError tempError("PARSE ERROR, MISSING ':' IN ARRAY DECLARATION", tempToken.lineNum, tempToken.t_string);
 			ResultOfParse.push_back(tempError);
 		}
 	}
 
-	if (tempSymbol.isGlobal == newSymbol->isGlobal) {
-		if (newSymbol->tempSymbolType == UNASSIGNED) {
-			newSymbol->tempSymbolType = tempSymbol.tempSymbolType;
-			newSymbol->isArray = tempSymbol.isArray;
-			newSymbol->arrayLower = tempSymbol.arrayLower;
-			newSymbol->arrayUpper = tempSymbol.arrayUpper;
+	if (tempSymbol.isGlobal == returnedSymbol->isGlobal) {
+		if (returnedSymbol->tempSymbolType == UNASSIGNED) {
+			returnedSymbol->tempSymbolType = tempSymbol.tempSymbolType;
+			returnedSymbol->isArray = tempSymbol.isArray;
+			returnedSymbol->arrayLower = tempSymbol.arrayLower;
+			returnedSymbol->arrayUpper = tempSymbol.arrayUpper;
 		}
 		else {
 			ParsingError tempError("PARSE ERROR, REDECLARING VARIABLE", tempToken.lineNum, tempToken.t_string);
@@ -329,8 +329,16 @@ DataStore Parser::VarDeclare(bool isGlobal) {
 				variableDeclarationData.tempToken.t_symbol = symbolTable->addSymbol(tempSymbol.id, tempSymbol, tempSymbol.isGlobal);
 			}
 			else {
-				ParsingError tempError("PARSE ERROR, REDECLARING VARIABLE IN GLOBAL SCOPE", tempToken.lineNum, tempToken.t_string);
-				ResultOfParse.push_back(tempError);
+				if (returnedSymbol->tempSymbolType == UNASSIGNED) {
+					returnedSymbol->tempSymbolType = tempSymbol.tempSymbolType;
+					returnedSymbol->isArray = tempSymbol.isArray;
+					returnedSymbol->arrayLower = tempSymbol.arrayLower;
+					returnedSymbol->arrayUpper = tempSymbol.arrayUpper;
+				}
+				else {
+					ParsingError tempError("PARSE ERROR, REDECLARING VARIABLE IN GLOBAL SCOPE", tempToken.lineNum, tempToken.t_string);
+					ResultOfParse.push_back(tempError);
+				}
 			}
 		}
 	}
@@ -350,12 +358,12 @@ DataStore Parser::ProcHead(bool isGlobal) {
 		tempSymbol.isGlobal = isGlobal;
 		tempSymbol.tempSymbolType = PROC;
 
-		Symbol* newSymbol = nullptr;
+		Symbol* returnedSymbol = nullptr;
 		DataStore dataToHandle = Ident();
 		procedureHeaderData.tempToken = dataToHandle.tempToken;
 		tempSymbol.id = procedureHeaderData.tempToken.t_string;
-		newSymbol = procedureHeaderData.tempToken.t_symbol;
-		//std::cout << newSymbol->id << '\t' << newSymbol->tempSymbolType << '\n';
+		returnedSymbol = procedureHeaderData.tempToken.t_symbol;
+		//std::cout << returnedSymbol->id << '\t' << returnedSymbol->tempSymbolType << '\n';
 
 
 		
@@ -365,7 +373,7 @@ DataStore Parser::ProcHead(bool isGlobal) {
 		if (tempToken.t_type == PARENBEGIN) {
 			tempToken = inputScanner.tokenScan(); // Get next token, ADDED LEFT PARENTHESES TO TREE
 
-			//std::cout << newSymbol->id << '\t' << newSymbol->tempSymbolType << '\n';
+			//std::cout << returnedSymbol->id << '\t' << returnedSymbol->tempSymbolType << '\n';
 
 
 			// Check for right parentheses
@@ -375,7 +383,7 @@ DataStore Parser::ProcHead(bool isGlobal) {
 			else {
 				DataStore paramListData = ParamList();
 				tempSymbol.procedureParameters = paramListData.procedureParameters;
-				//std::cout << newSymbol->id << '\t' << newSymbol->tempSymbolType << '\n';
+				//std::cout << returnedSymbol->id << '\t' << returnedSymbol->tempSymbolType << '\n';
 
 
 				if (tempToken.t_type == PARENEND) {
@@ -387,14 +395,14 @@ DataStore Parser::ProcHead(bool isGlobal) {
 				}
 			}
 
-			if (tempSymbol.isGlobal == newSymbol->isGlobal) {
-				if (newSymbol->tempSymbolType == UNASSIGNED) {
-					newSymbol->tempSymbolType = tempSymbol.tempSymbolType;
-					newSymbol->procedureParameters = tempSymbol.procedureParameters;
+			if (tempSymbol.isGlobal == returnedSymbol->isGlobal) {
+				if (returnedSymbol->tempSymbolType == UNASSIGNED) {
+					returnedSymbol->tempSymbolType = tempSymbol.tempSymbolType;
+					returnedSymbol->procedureParameters = tempSymbol.procedureParameters;
 				}
 				else {
 					//std::cout << tempSymbol.id << '\t' << tempSymbol.tempSymbolType << '\n';
-					//std::cout << newSymbol->id << '\t' << newSymbol->tempSymbolType << '\n';
+					//std::cout << returnedSymbol->id << '\t' << returnedSymbol->tempSymbolType << '\n';
 					ParsingError tempError("PARSE ERROR, REDECLARING VARIABLE", tempToken.lineNum, tempToken.t_string);
 					ResultOfParse.push_back(tempError);
 				}
@@ -511,25 +519,25 @@ DataStore Parser::ParamList() {
 DataStore Parser::Param() {
 	DataStore parameterData;
 
-	Symbol* newSymbol = nullptr;
+	Symbol* returnedSymbol = nullptr;
 	DataStore dataFromVariableDeclaration = VarDeclare(false); // Run variable declaration procedure
-	newSymbol = dataFromVariableDeclaration.tempToken.t_symbol;
+	returnedSymbol = dataFromVariableDeclaration.tempToken.t_symbol;
 
 	// Check for IN
 	if (tempToken.t_type == IN) {
-		parameterData.procedureParameters.push_back({ newSymbol, INTYPE });
+		parameterData.procedureParameters.push_back({ returnedSymbol, INTYPE });
 		tempToken = inputScanner.tokenScan(); // Get next token, ADDED IN TO TREE
 	}
 
 	// Check for OUT
 	else if (tempToken.t_type == OUT) {
-		parameterData.procedureParameters.push_back({ newSymbol, OUTTYPE });
+		parameterData.procedureParameters.push_back({ returnedSymbol, OUTTYPE });
 		tempToken = inputScanner.tokenScan(); // Get next token, ADDED OUT TO TREE
 	}
 
 	// Check for INOUT
 	else if (tempToken.t_type == INOUT) {
-		parameterData.procedureParameters.push_back({ newSymbol, INOUTTYPE });
+		parameterData.procedureParameters.push_back({ returnedSymbol, INOUTTYPE });
 		tempToken = inputScanner.tokenScan(); // Get next token, ADDED INOUT TO TREE
 	}
 	return parameterData;
@@ -907,73 +915,111 @@ DataStore Parser::Ident() {
 DataStore Parser::Expr() {
 
 	DataStore expressionData;
+	DataStore dataToHandle;
 
 	// Check for NOT
 	if (tempToken.t_type == NOT) {
-		tempToken = inputScanner.tokenScan(); // Get next token, ADDED NOT TO TREE
+		tempToken = inputScanner.tokenScan();
+		expressionData = Arith();
+		if (expressionData.tempType != SYMINTEGER || expressionData.tempType != SYMBOOL) {
+			ParsingError tempError("PARSE ERROR, USAGE OF 'NOT' NOT SUPPORTED WITH NON-INT/BOOL TYPES", tempToken.lineNum, tempToken.t_string);
+			ResultOfParse.push_back(tempError);
+		}
 	}
-
-	Arith(); // Run arithmetic procedure
-	ExprPrime(); // Run expression prime procedure
-	return expressionData; // Return out of the function
+	else {
+		dataToHandle = Arith();
+		expressionData = dataToHandle;
+		dataToHandle = ExprPrime(dataToHandle.tempToken, dataToHandle.tempType);
+		expressionData.tempToken = dataToHandle.tempToken;
+		expressionData.tempType = dataToHandle.tempType;
+	}
+	return expressionData;
 }
 
 // Expression Prime
-DataStore Parser::ExprPrime() {
+DataStore Parser::ExprPrime(token prevFacTok, SYMBOL_TYPES prevFacType) {
 
 	DataStore expressionData;
+	DataStore dataToHandle;
 
-	// Check for AND
-	if (tempToken.t_type == AND) {
-		tempToken = inputScanner.tokenScan(); // Get next token, ADDED AND TO TREE
-		Arith(); // Run arithmetic procedure
-		ExprPrime(); // Run expression prime procedure
-		return expressionData; // Return out of the function
-	}
-
-	// Check for OR
-	else if (tempToken.t_type == OR) {
-		tempToken = inputScanner.tokenScan(); // Get next token, ADDED OR TO TREE
-		Arith(); // Run arithmetic procedure
-		ExprPrime(); // Run expression prime procedure
-		return expressionData; // Return out of the function
+	// Check for AND or OR
+	if (tempToken.t_type == AND || tempToken.t_type == OR) {
+		tempToken = inputScanner.tokenScan();
+		dataToHandle = Arith();
+		expressionData = dataToHandle;
+		dataToHandle = ExprPrime(dataToHandle.tempToken, dataToHandle.tempType);
+		expressionData.tempToken = dataToHandle.tempToken;
 	}
 	else {
-		return expressionData; // Return out of the function
+		return expressionData;
 	}
+
+	if ((prevFacType == SYMBOOL && dataToHandle.tempType == SYMBOOL) || (prevFacType == SYMINTEGER && dataToHandle.tempType == SYMINTEGER)) {
+		if (dataToHandle.tempType == SYMBOOL) {
+			expressionData.tempType = SYMBOOL;
+		}
+		else {
+			expressionData.tempType = SYMINTEGER;
+		}
+	}
+	else {
+		ParsingError tempError("PARSE ERROR, & OR | MUST BE USED WITH BOOLS OR INTEGERS", tempToken.lineNum, tempToken.t_string);
+		ResultOfParse.push_back(tempError);
+	}
+	return expressionData;
 }
 
 // Arithmetic
 DataStore Parser::Arith() {
 	DataStore arithmeticData;
-	Relat(); // Run relation procedure
-	ArithPrime(); // Run arithmetic prime procedure
-	return arithmeticData; // Return out of the function
+	DataStore dataToHandle = Relat();
+	arithmeticData = dataToHandle;
+	dataToHandle = ArithPrime(dataToHandle.tempToken, dataToHandle.tempType);
+	arithmeticData.tempToken = dataToHandle.tempToken;
+	arithmeticData.tempType = dataToHandle.tempType;
+	return arithmeticData;
 }
 
 // Arithmetic Prime
-DataStore Parser::ArithPrime() {
+DataStore Parser::ArithPrime(token prevFacTok, SYMBOL_TYPES prevFacType) {
 
 	DataStore arithmeticData;
-
-	// Check for ADD
-	if (tempToken.t_type == ADD) {
-		tempToken = inputScanner.tokenScan(); // Get next token, ADDED ADD TO TREE
-		Relat(); // Run relation procedure
-		ArithPrime(); // Run arithmetic prime procedure
-		return arithmeticData; // Return out of the function
-	}
-
-	// Check for SUB
-	else if (tempToken.t_type == SUB) {
-		tempToken = inputScanner.tokenScan(); // Get next token, ADDED SUB TO TREE
-		Relat(); // Run relation procedure
-		ArithPrime(); // Run arithmetic prime procedure
-		return arithmeticData; // Return out of the function
+	DataStore dataToHandle;
+	 
+	// Check for ADD or SUB
+	if (tempToken.t_type == ADD || tempToken.t_type == SUB) {
+		tempToken = inputScanner.tokenScan();
+		dataToHandle = Relat();
+		arithmeticData = dataToHandle;
+		dataToHandle = ArithPrime(dataToHandle.tempToken, dataToHandle.tempType);
+		arithmeticData.tempToken = dataToHandle.tempToken;
+		return arithmeticData;
 	}
 	else {
-		return arithmeticData; // Return out of the function
+		return arithmeticData;
 	}
+
+	if (prevFacType == SYMINTEGER && dataToHandle.tempType == SYMINTEGER || prevFacType == SYMFLOAT && dataToHandle.tempType == SYMFLOAT) {
+		if (dataToHandle.tempType == SYMINTEGER) {
+			arithmeticData.tempType = SYMINTEGER;
+		}
+		else {
+			arithmeticData.tempType = SYMFLOAT;
+		}
+	}
+	else if (prevFacType == SYMINTEGER && dataToHandle.tempType == SYMFLOAT || prevFacType == SYMFLOAT && dataToHandle.tempType == SYMINTEGER) {
+		if (dataToHandle.tempType == SYMINTEGER) {
+			arithmeticData.tempType = SYMFLOAT;
+		}
+		else {
+			arithmeticData.tempType = SYMFLOAT;
+		}
+	}
+	else {
+		ParsingError tempError("PARSE ERROR, CANNOT ADD OR SUBTRACT NON-INT/FLOAT TYPES", tempToken.lineNum, tempToken.t_string);
+		ResultOfParse.push_back(tempError);
+	}
+	return arithmeticData;
 }
 
 // Relation

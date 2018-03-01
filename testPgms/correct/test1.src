@@ -4,8 +4,10 @@
 
 PROGRAM grant IS
 	global integer JAKE;
-	global integer ryan[3];
+	global integer ryan[0:3];
+	global bool azn;
 	global integer zach;
+	global float jh;
 
 	procedure if_proc()
 		integer declaration;
@@ -16,7 +18,7 @@ PROGRAM grant IS
 	end procedure;
 
 	procedure for_proc()
-                integer i;
+        integer i;
 		begin
 			for(i := 0; i < zach)
 				ryan := zach + i;
@@ -24,6 +26,10 @@ PROGRAM grant IS
 		end procedure;
 
 	begin
+		azn := true;
+		JAKE := 5;
+		//azn := azn & JAKE;
+		jh := not jh;
 		if_proc();
 		for_proc();
-end program.
+end program .

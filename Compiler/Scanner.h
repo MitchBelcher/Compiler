@@ -15,7 +15,7 @@ A function to check if a given string is a reserve word, and a temporary filestr
 
 class Scanner {
 public:
-	void init (const char* filePath, SymTable& newSymbolTable); // Constructor (pass filepath)
+	void init (const char* filePath, SymTable& returnedSymbolTable); // Constructor (pass filepath)
 	~Scanner(); // Destructor
 
 	//void scanIn (const char* filePath);

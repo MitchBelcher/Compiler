@@ -19,7 +19,7 @@ struct DataStore {
 
 class Parser {
 public:
-	Parser(const char* filePath, SymTable& newSymbolTable);
+	Parser(const char* filePath, SymTable& returnedSymbolTable);
 	void parseFile();
 
 	Scanner inputScanner;
@@ -48,9 +48,9 @@ private:
 	DataStore ArgumentList();
 
 	DataStore Expr();
-	DataStore ExprPrime();
+	DataStore ExprPrime(token prevFacTok, SYMBOL_TYPES prevFacType);
 	DataStore Arith();
-	DataStore ArithPrime();
+	DataStore ArithPrime(token prevFacTok, SYMBOL_TYPES prevFacType);
 	DataStore Relat();
 	DataStore RelatPrime();
 	DataStore Term();
