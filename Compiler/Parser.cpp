@@ -7,6 +7,8 @@ This cpp file contains the definition for Parser class functions, each going thr
 #include "Parser.h"
 #include "Errors.h"
 
+#include <iostream>
+
 // Main parser constructor, which calls the constructor for the scanner instance
 Parser::Parser(const char* filePath, SymTable& newSymbolTable) {
 	inputScanner.init(filePath, newSymbolTable);
@@ -39,7 +41,7 @@ DataStore Parser::Program() {
 		ProgramHead(); // Run program header procedure
 		ProgramBody(); // Rune program body procedure
 
-		symbolTable->CloseScope();
+		//symbolTable->CloseScope();
 
 		if (tempToken.t_type != FILEEND) {
 			// ERROR, MISSING FILE END
@@ -62,7 +64,7 @@ DataStore Parser::ProgramHead() {
 
 	// Check that the token is the program reserve word, ADDED PROGRAM TO TREE
 	if (tempToken.t_type == PROGRAM) {
-		symbolTable->OpenScope();
+		//symbolTable->OpenScope();
 		tempToken = inputScanner.tokenScan(); // Get next token
 		Ident(); // Run identifier procedure
 
@@ -353,12 +355,18 @@ DataStore Parser::ProcHead(bool isGlobal) {
 		procedureHeaderData.tempToken = dataToHandle.tempToken;
 		tempSymbol.id = procedureHeaderData.tempToken.t_string;
 		newSymbol = procedureHeaderData.tempToken.t_symbol;
+		//std::cout << newSymbol->id << '\t' << newSymbol->tempSymbolType << '\n';
 
+
+		
 		symbolTable->OpenScope();
 
 		// Check for left parentheses
 		if (tempToken.t_type == PARENBEGIN) {
 			tempToken = inputScanner.tokenScan(); // Get next token, ADDED LEFT PARENTHESES TO TREE
+
+			//std::cout << newSymbol->id << '\t' << newSymbol->tempSymbolType << '\n';
+
 
 			// Check for right parentheses
 			if (tempToken.t_type == PARENEND) {
@@ -367,6 +375,8 @@ DataStore Parser::ProcHead(bool isGlobal) {
 			else {
 				DataStore paramListData = ParamList();
 				tempSymbol.procedureParameters = paramListData.procedureParameters;
+				//std::cout << newSymbol->id << '\t' << newSymbol->tempSymbolType << '\n';
+
 
 				if (tempToken.t_type == PARENEND) {
 					tempToken = inputScanner.tokenScan();
@@ -383,6 +393,8 @@ DataStore Parser::ProcHead(bool isGlobal) {
 					newSymbol->procedureParameters = tempSymbol.procedureParameters;
 				}
 				else {
+					//std::cout << tempSymbol.id << '\t' << tempSymbol.tempSymbolType << '\n';
+					//std::cout << newSymbol->id << '\t' << newSymbol->tempSymbolType << '\n';
 					ParsingError tempError("PARSE ERROR, REDECLARING VARIABLE", tempToken.lineNum, tempToken.t_string);
 					ResultOfParse.push_back(tempError);
 				}
@@ -405,7 +417,6 @@ DataStore Parser::ProcHead(bool isGlobal) {
 		}
 	}
 	else {
-		// ERROR, PROCEDURE NOT FOUND, VIOLATION OF PROCEDURE CALL
 		ParsingError tempError("PARSE ERROR, MISSING PROCEDURE HEADER", tempToken.lineNum, tempToken.t_string);
 		ResultOfParse.push_back(tempError);
 	}
@@ -593,7 +604,7 @@ DataStore Parser::Assign(bool onlyAssign) {
 		}
 
 		// Check for left parentheses
-		else if (tempToken.t_type == PARENBEGIN && onlyAssign == true) {
+		else if (tempToken.t_type == PARENBEGIN && onlyAssign == false) {
 			tempToken = inputScanner.tokenScan(); // Get next token, ADDED LEFT PARENTHESES TO TREE
 			ArgumentList(); // Run argument list procedure
 
@@ -1089,14 +1100,13 @@ DataStore Parser::Factor() {
 		// Check for IDENTIFIER
 		if (tempToken.t_type == IDENTIFIER) {
 			Name(); // Run name procedure
-			return factorData; // Return out of the function
 		}
 
 		// Check for FLOAT OR INTEGER
 		if (tempToken.t_type == VALFLOAT || tempToken.t_type == VALINT) {
 			Number(); // Run number procedure
-			return factorData; // Return out of the function
 		}
+		return factorData;
 	}
 
 	// Check for IDENTIFIER

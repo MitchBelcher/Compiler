@@ -1,5 +1,6 @@
 #include "SymTable.h"
 #include "Errors.h"
+#include <iostream>
 
 using namespace std;
 
@@ -63,16 +64,6 @@ SymTable::SymTable() {
 	reserveSymbol.tempTokenType = FOR;
 	addSymbol(reserveSymbol.id, reserveSymbol, true);
 
-	reserveSymbol.id = "true";
-	reserveSymbol.tempTokenType = TRUE;
-	reserveSymbol.tempSymbolType = SYMBOOL;
-	addSymbol(reserveSymbol.id, reserveSymbol, true);
-
-	reserveSymbol.id = "false";
-	reserveSymbol.tempTokenType = FALSE;
-	reserveSymbol.tempSymbolType = SYMBOOL;
-	addSymbol(reserveSymbol.id, reserveSymbol, true);
-
 	reserveSymbol.id = "return";
 	reserveSymbol.tempTokenType = RETURN;
 	addSymbol(reserveSymbol.id, reserveSymbol, true);
@@ -95,6 +86,16 @@ SymTable::SymTable() {
 
 	reserveSymbol.id = "integer";
 	reserveSymbol.tempTokenType = INTEGER;
+	addSymbol(reserveSymbol.id, reserveSymbol, true);
+
+	reserveSymbol.id = "true";
+	reserveSymbol.tempTokenType = TRUE;
+	reserveSymbol.tempSymbolType = SYMBOOL;
+	addSymbol(reserveSymbol.id, reserveSymbol, true);
+
+	reserveSymbol.id = "false";
+	reserveSymbol.tempTokenType = FALSE;
+	reserveSymbol.tempSymbolType = SYMBOOL;
 	addSymbol(reserveSymbol.id, reserveSymbol, true);
 }
 
@@ -121,6 +122,8 @@ Symbol* SymTable::getSymbol(string id, bool onlyGlobal) {
 
 
 Symbol* SymTable::addSymbol(string id, Symbol symbolIn, bool isGlobal) {
+	
+	//cout << "adding symbol: " << id << '\t' << "TYPE: " << symbolIn.tempSymbolType << '\t' << endl;
 
 	if (isGlobal) {
 		GlobalTable.insert({ id, symbolIn });
@@ -144,14 +147,18 @@ Symbol* SymTable::addSymbol(string id, Symbol symbolIn, bool isGlobal) {
 				return &(iter->second);
 			}
 			else {
-				// ERROR, UNABLE TO ADD TO LOCAL SCOPE
 				SymbolError tempError("ERROR, UNABLE TO ADD SYMBOL TO LOCAL SCOPE", symbolIn.id);
 				ResultOfSymbol.push_back(tempError);
 			}
 		}
 		else {
 			GlobalTable.insert({ id, symbolIn });
-			// THROW WARNING, ADDED TO GLOBAL BY DEFAULT SINCE NO OPEN SCOPE(S)
+
+			auto iter = GlobalTable.find(id);
+			if (iter != GlobalTable.end()) {
+				return &(iter->second);
+			}
+
 			SymbolError tempError("WARNING, ASSUMED VALUE WAS MEANT TO BE ADDED TO GLOBAL", symbolIn.id);
 			ResultOfSymbol.push_back(tempError);
 		}
@@ -161,8 +168,10 @@ Symbol* SymTable::addSymbol(string id, Symbol symbolIn, bool isGlobal) {
 
 void SymTable::OpenScope() {
 	Scopes.push_back(HashTable());
+	//cout << "current scope size: " << Scopes.size() << endl;
 }
 
 void SymTable::CloseScope() {
 	Scopes.pop_back();
+	//cout << "current scope size: " << Scopes.size() << endl;
 }

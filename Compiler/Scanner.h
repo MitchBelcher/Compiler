@@ -23,7 +23,6 @@ public:
 	vector<token> getTokens(); // Vector to get tokens out
 
 private:
-	void checkForReserves (token &tempToken); // Function to check string for reserve word
 	//token tokenScan (FILE* stream);
 	vector<token> tempTokenList; // Temporary token vector
 	FILE* tempStream; // Temporary input filestream

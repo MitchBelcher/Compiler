@@ -30,5 +30,4 @@ public:
 private:
 	HashTable GlobalTable;
 	vector<HashTable> Scopes;
-	int currentDepth = 0;
 };
