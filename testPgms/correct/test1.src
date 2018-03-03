@@ -29,7 +29,7 @@ PROGRAM grant IS
 		azn := true;
 		JAKE := 5;
 		//azn := azn & JAKE;
-		jh := not jh;
+		//jh := not jh;
 		if_proc();
 		for_proc();
 end program .

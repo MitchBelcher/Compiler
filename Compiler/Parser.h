@@ -12,6 +12,7 @@ An instance of Scanner, a temporary token for parsing, as well as declarations f
 #include <vector>
 
 struct DataStore {
+	bool success = true;
 	token tempToken;
 	SYMBOL_TYPES tempType;
 	vector<pair<Symbol*, PARAM_TYPES>> procedureParameters = {};
@@ -44,7 +45,7 @@ private:
 	DataStore If();
 	DataStore Loop();
 	DataStore Return();
-	DataStore AssignState();
+	DataStore AssignState(token destTok, SYMBOL_TYPES destType);
 	DataStore ArgumentList();
 
 	DataStore Expr();
@@ -52,9 +53,9 @@ private:
 	DataStore Arith();
 	DataStore ArithPrime(token prevFacTok, SYMBOL_TYPES prevFacType);
 	DataStore Relat();
-	DataStore RelatPrime();
+	DataStore RelatPrime(token prevFacTok, SYMBOL_TYPES prevFacType);
 	DataStore Term();
-	DataStore TermPrime();
+	DataStore TermPrime(token prevFacTok, SYMBOL_TYPES prevFacType);
 	DataStore Factor();
 	DataStore Name();
 	DataStore Number();
