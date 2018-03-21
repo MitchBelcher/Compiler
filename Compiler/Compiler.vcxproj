@@ -114,12 +114,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="CodeGen.cpp" />
     <ClCompile Include="Parser.cpp" />
     <ClCompile Include="Scanner.cpp" />
     <ClCompile Include="Source.cpp" />
     <ClCompile Include="SymTable.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CodeGen.h" />
     <ClInclude Include="Errors.h" />
     <ClInclude Include="Parser.h" />
     <ClInclude Include="Scanner.h" />

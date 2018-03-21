@@ -16,6 +16,7 @@ struct DataStore {
 	token tempToken;
 	SYMBOL_TYPES tempType;
 	vector<pair<Symbol*, PARAM_TYPES>> procedureParameters = {};
+	vector<SYMBOL_TYPES> args = {};
 };
 
 class Parser {

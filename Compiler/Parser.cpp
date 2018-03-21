@@ -18,11 +18,15 @@ Parser::Parser(const char* filePath, SymTable& returnedSymbolTable) {
 // Begin parsing the file by scanning the first token, and then running the program procedures
 void Parser::parseFile() {
 	tempToken = inputScanner.tokenScan();
+
+	// If the first thing we process is the end of the file, then there are issues with block comments.
 	if (tempToken.t_type == STREAMEND) {
 		ParsingError tempError("FATAL ERROR, MISMATCHED BLOCK COMMENTS", -1, "");
 		ResultOfParse.push_back(tempError);
 		return;
 	}
+
+	// If the first thing we process is an invalid token, there is an issue.
 	if (tempToken.t_type == INVALID) {
 		ParsingError tempError("FATAL ERROR, INVALID TOKEN FOUND", tempToken.lineNum, tempToken.t_string);
 		ResultOfParse.push_back(tempError);
@@ -36,21 +40,16 @@ DataStore Parser::Program() {
 
 	DataStore programData;
 
-	// If the first token is the program reserve word, we can proceed
 	if (tempToken.t_type == PROGRAM) {
-		ProgramHead(); // Run program header procedure
-		ProgramBody(); // Rune program body procedure
-
-		//symbolTable->CloseScope();
+		ProgramHead();
+		ProgramBody();
 
 		if (tempToken.t_type != FILEEND) {
-			// ERROR, MISSING FILE END
 			ParsingError tempError("FATAL ERROR, MISSING '.' FOR END OF FILE", -1, "");
 			ResultOfParse.push_back(tempError);
 		}
 	}
 	else {
-		// ERROR FIRST TOKEN WAS NOT PROGRAM RESERVE WORD, VIOLATION OF LANGUAGE
 		ParsingError tempError("PARSE ERROR, MISSING 'PROGRAM' AT FILE BEGIN", tempToken.lineNum, tempToken.t_string);
 		ResultOfParse.push_back(tempError);
 	}
@@ -62,17 +61,14 @@ DataStore Parser::ProgramHead() {
 
 	DataStore programHeadData;
 
-	// Check that the token is the program reserve word, ADDED PROGRAM TO TREE
 	if (tempToken.t_type == PROGRAM) {
-		tempToken = inputScanner.tokenScan(); // Get next token
-		Ident(); // Run identifier procedure
+		tempToken = inputScanner.tokenScan();
+		Ident();
 
-		// Check that the token is the is reserve word
 		if (tempToken.t_type == IS) {
-			tempToken = inputScanner.tokenScan(); // Get next token, ADDED IS TO TREE
+			tempToken = inputScanner.tokenScan();
 		}
 		else {
-			// ERROR, NO IS IN PROGRAM HEADER
 			ParsingError tempError("PARSE ERROR, MISSING 'IS' AT FILE BEGIN", tempToken.lineNum, tempToken.t_string);
 			ResultOfParse.push_back(tempError);
 		}
@@ -85,58 +81,45 @@ DataStore Parser::ProgramBody() {
 
 	DataStore programBodyData;
 
-	// CHECK FOR DECLARATION
-	// If the token has type of global, procedure, integer, float, bool, string or char
+	// Declarations
 	while (tempToken.t_type == GLOBAL || tempToken.t_type == PROCEDURE || tempToken.t_type == INTEGER || tempToken.t_type == FLOAT || tempToken.t_type == BOOL || tempToken.t_type == STRING || tempToken.t_type == CHAR) {
-		Declare(); // Run declaration procedure
+		Declare();
 
-		//tempToken = inputScanner.tokenScan(); // Get next token
-
-		// Check that the token is the semicolon type
 		if (tempToken.t_type == SEMICOLON) {
-			tempToken = inputScanner.tokenScan(); // Get next token, ADDED SEMICOLON TO TREE
+			tempToken = inputScanner.tokenScan();
 		}
 		else {
-			// ERROR, NO SEMICOLON AFTER DECLARATION
 			ParsingError tempError("PARSE ERROR, MISSING ';' IN DECLARATION", tempToken.lineNum, tempToken.t_string);
 			ResultOfParse.push_back(tempError);
 		}
 	}
 
-	// CHECK FOR BEGIN
-	// Check that the token is the begin reserve word
 	if (tempToken.t_type == BEGIN) {
-		tempToken = inputScanner.tokenScan(); // Get next token, ADDED BEGIN TO TREE
+		tempToken = inputScanner.tokenScan();
 	}
 	else {
-		// ERROR, BEGIN RESERVE WORD NOT FOUND, VIOLATION OF LANGUAGE
 		ParsingError tempError("PARSE ERROR, MISSING BEGIN IN DECLARATION", tempToken.lineNum, tempToken.t_string);
 		ResultOfParse.push_back(tempError);
 	}
 
-	// CHECK FOR STATEMENT
-	// If the token has type of identifier, if, for, or return
+	// Statements
 	while (tempToken.t_type == IDENTIFIER || tempToken.t_type == IF || tempToken.t_type == FOR || tempToken.t_type == RETURN) {
-		Statement(); // Run statement procedure
+		Statement();
 
-		// Check that the token is the semicolon type
 		if (tempToken.t_type == SEMICOLON) {
-			tempToken = inputScanner.tokenScan(); // Get next token, ADDED SEMICOLON TO TREE
+			tempToken = inputScanner.tokenScan();
 		}
 		else {
-			// ERROR, NO SEMICOLON, VIOLATION OF DECLARATION
 			ParsingError tempError("PARSE ERROR, MISSING ';' IN STATEMENT", tempToken.lineNum, tempToken.t_string);
 			ResultOfParse.push_back(tempError);
 		}
 	}
 
-	// Check for END
 	if (tempToken.t_type == END) {
-		tempToken = inputScanner.tokenScan(); // Get next token, ADDED END TO TREE
+		tempToken = inputScanner.tokenScan();
 
-		// Check for PROGRAM
 		if (tempToken.t_type == PROGRAM) {
-			tempToken = inputScanner.tokenScan(); // Get next token, ADDED PROGRAM TO TREE
+			tempToken = inputScanner.tokenScan();
 		}
 		else {
 			ParsingError tempError("PARSE ERROR, MISSING PROGRAM IN END PROGRAM", tempToken.lineNum, tempToken.t_string);
@@ -156,31 +139,30 @@ DataStore Parser::Declare() {
 	DataStore declarationData;
 	bool isGlobal = false;
 
-
-	// CHECK FOR GLOBAL
+	// Global declarations
 	if (tempToken.t_type == GLOBAL) {
 		isGlobal = true;
-		tempToken = inputScanner.tokenScan(); // Get next token, ADDED GLOBAL TO TREE
+		tempToken = inputScanner.tokenScan();
 
-		// CHECK FOR PROCEDURE
+		// Procedure declaration
 		if (tempToken.t_type == PROCEDURE) {
-			ProcDeclare(isGlobal); // Run procedure declaration procedure
+			ProcDeclare(isGlobal);
 		}
 
-		// Check if type is a variable
+		// Variable declaration
 		else if (tempToken.t_type == INTEGER || tempToken.t_type == CHAR || tempToken.t_type == STRING || tempToken.t_type == FLOAT || tempToken.t_type == BOOL) {
-			VarDeclare(isGlobal); // Run variable declaration procedure
+			VarDeclare(isGlobal);
 		}
 	}
 
-	// CHECK FOR PROCEDURE
+	// Local procedure declaration
 	else if (tempToken.t_type == PROCEDURE) {
-		ProcDeclare(isGlobal); // Run procedure declaration procedure
+		ProcDeclare(isGlobal);
 	}
 
-	// Check if type is a variable
+	// Local variable declaration
 	else if (tempToken.t_type == INTEGER || tempToken.t_type == CHAR || tempToken.t_type == STRING || tempToken.t_type == FLOAT || tempToken.t_type == BOOL) {
-		VarDeclare(isGlobal); // Run variable declaration procedure
+		VarDeclare(isGlobal);
 	}
 	return declarationData;
 }
@@ -190,27 +172,22 @@ DataStore Parser::Statement() {
 
 	DataStore statementData;
 
-	// Assign statement/Procedure 
 	if (tempToken.t_type == IDENTIFIER) {
-		Assign(false); // Run assign procedure
+		Assign(false);
 	}
 
-	// If conditional start
 	else if (tempToken.t_type == IF) {
-		If(); // Run if procedure
+		If();
 	}
 
-	// For loop start
 	else if (tempToken.t_type == FOR) {
-		Loop(); // Run loop procedure
+		Loop();
 	}
 
-	// Return statement
 	else if (tempToken.t_type == RETURN) {
-		Return(); // Run return procedure
+		Return();
 	}
 	else {
-		// ERROR, NO VALID STATEMENT PRESENT
 		ParsingError tempError("PARSE ERROR, NO VALID STATEMENT PRESENT", tempToken.lineNum, tempToken.t_string);
 		ResultOfParse.push_back(tempError);
 	}
@@ -220,8 +197,8 @@ DataStore Parser::Statement() {
 // Procedure Declaration
 DataStore Parser::ProcDeclare(bool isGlobal) {
 	DataStore procedureDeclarationData;
-	ProcHead(isGlobal); // Run procedure head procedure
-	ProcBody(); // Run procedure body procedure
+	ProcHead(isGlobal);
+	ProcBody();
 	symbolTable->CloseScope();
 	return procedureDeclarationData;
 }
@@ -246,14 +223,15 @@ DataStore Parser::VarDeclare(bool isGlobal) {
 		returnedSymbol = variableDeclarationData.tempToken.t_symbol;
 	}
 
-	// Check for left bracket
 	if (tempToken.t_type == BRACKBEGIN) {
-		tempToken = inputScanner.tokenScan(); // Get next token, ADDED LEFT BRACKET TO TREE
+		tempToken = inputScanner.tokenScan();
+
+		// Check for negative bound
 		if (tempToken.t_type == SUB) {
 			tempToken = inputScanner.tokenScan();
 			negBound = true;
 		}
-		dataToHandle = Number(); // Run number procedure
+		dataToHandle = Number();
 		
 		if (dataToHandle.success) {
 			if (dataToHandle.tempToken.t_type != VALINT) {
@@ -262,6 +240,8 @@ DataStore Parser::VarDeclare(bool isGlobal) {
 			}
 			else {
 				variableDeclarationData.tempToken = dataToHandle.tempToken;
+
+				// If the bound is negative, reflect that in the token and the array bound for the symbol
 				if (negBound) {
 					variableDeclarationData.tempToken.t_int = dataToHandle.tempToken.t_int * -1;
 				}
@@ -269,14 +249,15 @@ DataStore Parser::VarDeclare(bool isGlobal) {
 			}
 		}
 
-		// Check for colon
 		if (tempToken.t_type == COLON) {
-			tempToken = inputScanner.tokenScan(); // Get next token, ADDED COLON TO TREE
+			tempToken = inputScanner.tokenScan();
+
+			// Check for negative bound
 			if (tempToken.t_type == SUB) {
 				tempToken = inputScanner.tokenScan();
 				negBound = true;
 			}
-			dataToHandle = Number(); // Run number procedure
+			dataToHandle = Number();
 
 			if (dataToHandle.success) {
 				if (dataToHandle.tempToken.t_type != VALINT) {
@@ -289,6 +270,8 @@ DataStore Parser::VarDeclare(bool isGlobal) {
 						ResultOfParse.push_back(tempError);
 					}
 					else {
+
+						// If the bound is negative, reflect that in the token and the array bound for the symbol
 						if (negBound) {
 							variableDeclarationData.tempToken.t_int = dataToHandle.tempToken.t_int * -1;
 						}
@@ -297,19 +280,16 @@ DataStore Parser::VarDeclare(bool isGlobal) {
 				}
 			}
 
-			// Check for right bracket
 			if (tempToken.t_type == BRACKEND) {
 				tempSymbol.isArray = true;
-				tempToken = inputScanner.tokenScan(); // Get next token, ADDED RIGHT BRACKET TO TREE
+				tempToken = inputScanner.tokenScan();
 			}
 			else {
-				// ERROR, MISSING RIGHT BRACKET, VIOLATION OF VARIABLE DECLARATION
 				ParsingError tempError("PARSE ERROR, MISSING '[' IN VARIABLE DECLARATION", tempToken.lineNum, tempToken.t_string);
 				ResultOfParse.push_back(tempError);
 			}
 		}
 		else {
-			// ERROR, MISSING COLON, VIOLATION OF VARIABLE DECLARATION
 			ParsingError tempError("PARSE ERROR, MISSING ':' IN ARRAY DECLARATION", tempToken.lineNum, tempToken.t_string);
 			ResultOfParse.push_back(tempError);
 		}
@@ -323,7 +303,7 @@ DataStore Parser::VarDeclare(bool isGlobal) {
 			returnedSymbol->arrayUpper = tempSymbol.arrayUpper;
 		}
 		else {
-			ParsingError tempError("PARSE ERROR, REDECLARING VARIABLE", tempToken.lineNum, tempToken.t_string);
+			ParsingError tempError("PARSE ERROR, REDECLARING LOCAL VARIABLE", tempToken.lineNum, tempToken.t_string);
 			ResultOfParse.push_back(tempError);
 		}
 	}
@@ -358,9 +338,8 @@ DataStore Parser::ProcHead(bool isGlobal) {
 	
 	DataStore procedureHeaderData;
 
-	// Check for PROCEDURE
 	if (tempToken.t_type == PROCEDURE) {
-		tempToken = inputScanner.tokenScan(); // Get next token, ADDED PROCEDURE TO TREE
+		tempToken = inputScanner.tokenScan();
 
 		Symbol tempSymbol;
 		tempSymbol.isGlobal = isGlobal;
@@ -402,14 +381,12 @@ DataStore Parser::ProcHead(bool isGlobal) {
 
 		symbolTable->OpenScope();
 
-		// Check for left parentheses
 		if (tempToken.t_type == PARENBEGIN) {
-			tempToken = inputScanner.tokenScan(); // Get next token, ADDED LEFT PARENTHESES TO TREE
+			tempToken = inputScanner.tokenScan();
 
 
-			// Check for right parentheses
 			if (tempToken.t_type == PARENEND) {
-				tempToken = inputScanner.tokenScan(); // Get next token, ADDED RIGHT PARENTHESES TO TREE
+				tempToken = inputScanner.tokenScan();
 			}
 			else {
 				DataStore paramListData = ParamList();
@@ -432,7 +409,7 @@ DataStore Parser::ProcHead(bool isGlobal) {
 					returnedSymbol->procedureParameters = tempSymbol.procedureParameters;
 				}
 				else {
-					ParsingError tempError("PARSE ERROR, REDECLARING VARIABLE", tempToken.lineNum, tempToken.t_string);
+					ParsingError tempError("PARSE ERROR, REDECLARING LOCAL VARIABLE", tempToken.lineNum, tempToken.t_string);
 					ResultOfParse.push_back(tempError);
 				}
 			}
@@ -469,14 +446,12 @@ DataStore Parser::ProcBody() {
 
 	DataStore procedureBodyData;
 
-	// CHECK FOR DECLARATION
-	// If the token has type of global, procedure, integer, float, bool, string or char
+	// Declarations
 	while (tempToken.t_type == GLOBAL || tempToken.t_type == PROCEDURE || tempToken.t_type == INTEGER || tempToken.t_type == FLOAT || tempToken.t_type == BOOL || tempToken.t_type == STRING || tempToken.t_type == CHAR) {
-		Declare(); // Run declaration procedure
+		Declare();
 
-		// Check that the token is the semicolon type
 		if (tempToken.t_type == SEMICOLON) {
-			tempToken = inputScanner.tokenScan(); // Get next token, ADDED SEMICOLON TO TREE
+			tempToken = inputScanner.tokenScan();
 		}
 		else {
 			ParsingError tempError("PARSE ERROR, MISSING ';' IN DECLARATION", tempToken.lineNum, tempToken.t_string);
@@ -484,40 +459,32 @@ DataStore Parser::ProcBody() {
 		}
 	}
 
-	// CHECK FOR BEGIN
-	// Check that the token is the begin reserve word
 	if (tempToken.t_type == BEGIN) {
-		tempToken = inputScanner.tokenScan(); // Get next token, ADDED BEGIN TO TREE
+		tempToken = inputScanner.tokenScan();
 	}
 	else {
-		// ERROR, BEGIN RESERVE WORD NOT FOUND, VIOLATION OF LANGUAGE
 		ParsingError tempError("PARSE ERROR, MISSING BEGIN IN PROCEDURE BODY", tempToken.lineNum, tempToken.t_string);
 		ResultOfParse.push_back(tempError);
 	}
 
-	// CHECK FOR STATEMENT
-	// If the token has type of identifier, if, for, or return
+	// Statements
 	while (tempToken.t_type == IDENTIFIER || tempToken.t_type == IF || tempToken.t_type == FOR || tempToken.t_type == RETURN) {
-		Statement(); // Run statement procedure
+		Statement();
 
-		// Check that the token is the semicolon type
 		if (tempToken.t_type == SEMICOLON) {
-			tempToken = inputScanner.tokenScan(); // Get next token, ADDED SEMICOLON TO TREE
+			tempToken = inputScanner.tokenScan();
 		}
 		else {
-			// ERROR, NO SEMICOLON, VIOLATION OF DECLARATION
 			ParsingError tempError("PARSE ERROR, MISSING ';' IN STATEMENT", tempToken.lineNum, tempToken.t_string);
 			ResultOfParse.push_back(tempError);
 		}
 	}
 
-	// Check for END
 	if (tempToken.t_type == END) {
-		tempToken = inputScanner.tokenScan(); // Get next token, ADDED END TO TREE
+		tempToken = inputScanner.tokenScan();
 
-		// Check for PROCEDURE
 		if (tempToken.t_type == PROCEDURE) {
-			tempToken = inputScanner.tokenScan(); // Get next token, ADDED PROGRAM TO TREE
+			tempToken = inputScanner.tokenScan();
 		}
 		else {
 			ParsingError tempError("PARSE ERROR, MISSING PROCEDURE IN END PROCEDURE", tempToken.lineNum, tempToken.t_string);
@@ -535,16 +502,16 @@ DataStore Parser::ProcBody() {
 DataStore Parser::ParamList() {
 	DataStore parameterListData;
 
-	DataStore dataFromParam = Param(); // Run parameter procedure
+	DataStore dataFromParam = Param();
 	if (dataFromParam.success) {
 		parameterListData.procedureParameters.push_back(dataFromParam.procedureParameters[0]);
 	}
 
-	// Check for comma
+	// Multiple parameters
 	if (tempToken.t_type == COMMA) {
-		tempToken = inputScanner.tokenScan(); // Get next token, ADDED COMMA TO TREE
+		tempToken = inputScanner.tokenScan();
 
-		dataFromParam = ParamList(); // Run parameter list procedure
+		dataFromParam = ParamList();
 		if (dataFromParam.success) {
 			parameterListData.procedureParameters.insert(parameterListData.procedureParameters.end(), dataFromParam.procedureParameters.begin(), dataFromParam.procedureParameters.end());
 		}
@@ -557,27 +524,24 @@ DataStore Parser::Param() {
 	DataStore parameterData;
 
 	Symbol* returnedSymbol = nullptr;
-	DataStore dataFromVariableDeclaration = VarDeclare(false); // Run variable declaration procedure
+	DataStore dataFromVariableDeclaration = VarDeclare(false);
 	if (dataFromVariableDeclaration.success) {
 		returnedSymbol = dataFromVariableDeclaration.tempToken.t_symbol;
 	}
 
-	// Check for IN
 	if (tempToken.t_type == IN) {
 		parameterData.procedureParameters.push_back({ returnedSymbol, INTYPE });
-		tempToken = inputScanner.tokenScan(); // Get next token, ADDED IN TO TREE
+		tempToken = inputScanner.tokenScan();
 	}
 
-	// Check for OUT
 	else if (tempToken.t_type == OUT) {
 		parameterData.procedureParameters.push_back({ returnedSymbol, OUTTYPE });
-		tempToken = inputScanner.tokenScan(); // Get next token, ADDED OUT TO TREE
+		tempToken = inputScanner.tokenScan();
 	}
 
-	// Check for INOUT
 	else if (tempToken.t_type == INOUT) {
 		parameterData.procedureParameters.push_back({ returnedSymbol, INOUTTYPE });
-		tempToken = inputScanner.tokenScan(); // Get next token, ADDED INOUT TO TREE
+		tempToken = inputScanner.tokenScan();
 	}
 	return parameterData;
 }
@@ -587,37 +551,27 @@ DataStore Parser::TypeMark() {
 
 	DataStore typeData;
 
-	// Check for INTEGER
 	if (tempToken.t_type == INTEGER) {
 		typeData.tempType = SYMINTEGER;
-		tempToken = inputScanner.tokenScan(); // Get next token, ADDED INTEGER TO TREE
+		tempToken = inputScanner.tokenScan();
 	}
-
-	// Check for FLOAT
 	else if (tempToken.t_type == FLOAT) {
 		typeData.tempType = SYMFLOAT;
-		tempToken = inputScanner.tokenScan(); // Get next token, ADDED FLOAT TO TREE
+		tempToken = inputScanner.tokenScan();
 	}
-
-	// Check for BOOL
 	else if (tempToken.t_type == BOOL) {
 		typeData.tempType = SYMBOOL;
-		tempToken = inputScanner.tokenScan(); // Get next token, ADDED BOOL TO TREE
+		tempToken = inputScanner.tokenScan();
 	}
-
-	// Check for CHAR
 	else if (tempToken.t_type == CHAR) {
 		typeData.tempType = SYMCHAR;
-		tempToken = inputScanner.tokenScan(); // Get next token, ADDED CHAR TO TREE
+		tempToken = inputScanner.tokenScan();
 	}
-
-	// Check for STRING
 	else if (tempToken.t_type == STRING) {
 		typeData.tempType = SYMSTRING;
-		tempToken = inputScanner.tokenScan(); // Get next token, ADDED STRING TO TREE
+		tempToken = inputScanner.tokenScan();
 	}
 	else {
-		// ERROR, NO VALID TYPE DECLARED
 		ParsingError tempError("PARSE ERROR, NO VALID TYPE DECLARED", tempToken.lineNum, tempToken.t_string);
 		ResultOfParse.push_back(tempError);
 	}
@@ -630,54 +584,74 @@ DataStore Parser::Assign(bool onlyAssign) {
 	DataStore assignData;
 	DataStore destData;
 
-	// Check for IDENTIFIER
 	if (tempToken.t_type == IDENTIFIER) {
-		DataStore dataToHandle = Ident(); // Run identifier procedure
+		DataStore dataToHandle = Ident();
 		if (dataToHandle.success) {
 			assignData.tempToken = dataToHandle.tempToken;
 			assignData.tempType = dataToHandle.tempType;
 			destData = dataToHandle;
 		}
 
-		// Check for left bracket
 		if (tempToken.t_type == BRACKBEGIN) {
-			tempToken = inputScanner.tokenScan(); // Get next token, ADDED LEFT BRACKET TO TREE
-			dataToHandle = Expr(); // Run expression procedure
+			tempToken = inputScanner.tokenScan();
+			dataToHandle = Expr();
 
 			if (dataToHandle.tempType != SYMINTEGER) {
 				ParsingError tempError("PARSE ERROR, ARRAY ACESSORS MUST BE INTEGER VALUES", tempToken.lineNum, tempToken.t_string);
 				ResultOfParse.push_back(tempError);
 			}
 
-			// Check for right bracket
 			if (tempToken.t_type == BRACKEND) {
-				tempToken = inputScanner.tokenScan(); // Get next token, ADDED RIGHT BRACKET TO TREE
-				AssignState(destData.tempToken, destData.tempType); // Run statement assignment procedure
+				tempToken = inputScanner.tokenScan();
+				AssignState(destData.tempToken, destData.tempType);
 			}
 			else {
-				// ERROR, VIOLATION IN IDENTIFIER ASSIGNMENT
 				ParsingError tempError("PARSE ERROR, MISSING ']' IN ASSIGNMENT", tempToken.lineNum, tempToken.t_string);
 				ResultOfParse.push_back(tempError);
 			}
 		}
 
-		// Check for left parentheses
 		else if (tempToken.t_type == PARENBEGIN && onlyAssign == false) {
-			tempToken = inputScanner.tokenScan(); // Get next token, ADDED LEFT PARENTHESES TO TREE
-			ArgumentList(); // Run argument list procedure
+			tempToken = inputScanner.tokenScan();
+			destData = ArgumentList();
 
-			// Check for right parenthese
+			if (destData.success) {
+				destData.args = destData.args;
+			}
+
 			if (tempToken.t_type == PARENEND) {
-				tempToken = inputScanner.tokenScan(); // Get next token, ADDED RIGHT PARENTHESES TO TREE
+				tempToken = inputScanner.tokenScan();
 			}
 			else {
 				ParsingError tempError("PARSE ERROR, MISSING ')' IN ASSIGNMENT", tempToken.lineNum, tempToken.t_string);
 				ResultOfParse.push_back(tempError);
 			}
+
+			if (destData.tempToken.t_symbol->procedureParameters.size() == destData.args.size()) {
+
+				// Check parameter types
+				for (int i = 0; i < destData.procedureParameters.size(); i++) {
+					if (destData.tempToken.t_symbol->procedureParameters[i].first->tempSymbolType == destData.args[i]) {
+
+					}
+					else {
+						ParsingError tempError("PARSE ERROR, MISMATCHED PROCEDURE PARAMETER TYPES", tempToken.lineNum, tempToken.t_string);
+						ResultOfParse.push_back(tempError);
+					}
+				}
+			}
+			else if (destData.tempToken.t_symbol->procedureParameters.size() > destData.args.size()) {
+				ParsingError tempError("PARSE ERROR, TOO FEW ARGUMENTS IN PROCEDURE CALL", tempToken.lineNum, tempToken.t_string);
+				ResultOfParse.push_back(tempError);
+			}
+			else {
+				ParsingError tempError("PARSE ERROR, TOO MANY ARGUMENTS IN PROCEDURE CALL", tempToken.lineNum, tempToken.t_string);
+				ResultOfParse.push_back(tempError);
+			}
 		}
 		else {
 			if (tempToken.t_type == SEMIEQUAL) {
-				AssignState(destData.tempToken, destData.tempType); // Run statement assignment procedure
+				AssignState(destData.tempToken, destData.tempType);
 			}
 			else {
 				ParsingError tempError("PARSE ERROR, MISSING ':=' IN ASSIGNMENT", tempToken.lineNum, tempToken.t_string);
@@ -694,10 +668,9 @@ DataStore Parser::AssignState(token destTok, SYMBOL_TYPES destType) {
 	DataStore assignStateData;
 	DataStore dataToHandle;
 
-	// Check for EQUALS
 	if (tempToken.t_type == SEMIEQUAL) {
-		tempToken = inputScanner.tokenScan(); // Get next token, ADDED EQUALS TO TREE
-		dataToHandle = Expr(); // Run expression procdeure
+		tempToken = inputScanner.tokenScan();
+		dataToHandle = Expr();
 		if (dataToHandle.success) {
 			assignStateData.tempToken = dataToHandle.tempToken;
 			assignStateData.tempType = dataToHandle.tempType;
@@ -721,7 +694,6 @@ DataStore Parser::AssignState(token destTok, SYMBOL_TYPES destType) {
 		}
 	}
 	else {
-		// ERROR, NO EQUALS IN ASSIGNMENT
 		ParsingError tempError("PARSE ERROR, MISSING ':=' IN ASSIGNMENT", tempToken.lineNum, tempToken.t_string);
 		ResultOfParse.push_back(tempError);
 	}
@@ -732,13 +704,18 @@ DataStore Parser::AssignState(token destTok, SYMBOL_TYPES destType) {
 DataStore Parser::ArgumentList() {
 
 	DataStore argumentListData;
+	DataStore dataToHandle = Expr();
+	if (dataToHandle.success) {
+		dataToHandle.args.push_back(dataToHandle.tempType);
+	}
 
-	Expr(); // Run expression procedure
-
-	// Check for COMMA
+	// Multiple arguments
 	if (tempToken.t_type == COMMA) {
-		tempToken = inputScanner.tokenScan(); // Get next token, ADDED COMMA TO TREE
-		ArgumentList(); // Run argument list procedure
+		tempToken = inputScanner.tokenScan();
+		dataToHandle = ArgumentList();
+		if (dataToHandle.success) {
+			dataToHandle.args.insert(dataToHandle.args.end(), dataToHandle.args.begin(), dataToHandle.args.end());
+		}
 	}
 	return argumentListData;
 }
@@ -748,14 +725,12 @@ DataStore Parser::If() {
 
 	DataStore ifData;
 
-	// Check for IF
 	if (tempToken.t_type == IF) {
-		tempToken = inputScanner.tokenScan(); // Get next token, ADDED IF TO TREE
+		tempToken = inputScanner.tokenScan();
 
-		// Check for left parentheses
 		if (tempToken.t_type == PARENBEGIN) {
-			tempToken = inputScanner.tokenScan(); // Get next token, ADDED LEFT PARENTHESES TO TREE
-			DataStore dataToHandle = Expr(); // Run expression procedure
+			tempToken = inputScanner.tokenScan();
+			DataStore dataToHandle = Expr();
 			if (dataToHandle.success) {
 				ifData.tempToken = dataToHandle.tempToken;
 				ifData.tempType = dataToHandle.tempType;
@@ -771,111 +746,90 @@ DataStore Parser::If() {
 				ResultOfParse.push_back(tempError);
 			}
 
-			// Check for right parentheses
 			if (tempToken.t_type == PARENEND) {
-				tempToken = inputScanner.tokenScan(); // Get next token, ADDED RIGHT PARENTHESES TO TREE
+				tempToken = inputScanner.tokenScan();
 
-				// Check for THEN
 				if (tempToken.t_type == THEN) {
-					tempToken = inputScanner.tokenScan(); // Get next token, ADDED THEN TO TREE
-					Statement(); // Run statement procedure
+					tempToken = inputScanner.tokenScan();
+					Statement();
 
-					// Check for SEMICOLON
 					if (tempToken.t_type == SEMICOLON) {
-						tempToken = inputScanner.tokenScan(); // Get next token, ADDED SEMICOLON TO TREE
+						tempToken = inputScanner.tokenScan();
 					}
 					else {
-						// ERROR, NO SEMICOLON IN STATEMENT
 						ParsingError tempError("PARSE ERROR, MISSING ';' AFTER THEN IN STATEMENT", tempToken.lineNum, tempToken.t_string);
 						ResultOfParse.push_back(tempError);
 					}
 
-					// Check for IDENTIFIER, IF, FOR, or RETURN
 					while (tempToken.t_type == IDENTIFIER || tempToken.t_type == IF || tempToken.t_type == FOR || tempToken.t_type == RETURN) {
-						Statement(); // Run statement procedure
+						Statement();
 
-						// Check for SEMICOLON
 						if (tempToken.t_type == SEMICOLON) {
-							tempToken = inputScanner.tokenScan(); // Get next token, ADDED SEMICOLON TO TREE
+							tempToken = inputScanner.tokenScan();
 						}
 						else {
-							// ERROR, NO SEMICOLON IN STATEMENT
 							ParsingError tempError("PARSE ERROR, MISSING ';' AFTER IDENT/IF/FOR/RETURN IN STATEMENT", tempToken.lineNum, tempToken.t_string);
 							ResultOfParse.push_back(tempError);
 						}
 					}
 
-					// Check for ELSE
 					if (tempToken.t_type == ELSE) {
-						tempToken = inputScanner.tokenScan(); // Get next token, ADDED ELSE TO TREE
-						Statement(); // Run statement procedure
+						tempToken = inputScanner.tokenScan();
+						Statement();
 
-						// Check for SEMICOLON
 						if (tempToken.t_type == SEMICOLON) {
-							tempToken = inputScanner.tokenScan(); // Get next token, ADDED SEMICOLON TO TREE
+							tempToken = inputScanner.tokenScan();
 						}
 						else {
-							// ERROR, NO SEMICOLON IN STATEMENT
 							ParsingError tempError("PARSE ERROR, MISSING ';' AFTER ELSE IN STATEMENT", tempToken.lineNum, tempToken.t_string);
 							ResultOfParse.push_back(tempError);
 						}
 
-						// Check for IDENTIFIER, IF, FOR, RETURN
 						while (tempToken.t_type == IDENTIFIER || tempToken.t_type == IF || tempToken.t_type == FOR || tempToken.t_type == RETURN) {
-							Statement(); // Run statement procedure
+							Statement();
 
-							// Check for SEMICOLON
 							if (tempToken.t_type == SEMICOLON) {
-								tempToken = inputScanner.tokenScan(); // Get next token, ADDED SEMICOLON TO TREE
+								tempToken = inputScanner.tokenScan();
 							}
 							else {
-								// ERROR, NO SEMICOLON IN STATEMENT
 								ParsingError tempError("PARSE ERROR, MISSING ';' AFTER IDENT/IF/FOR/RETURN IN STATEMENT", tempToken.lineNum, tempToken.t_string);
 								ResultOfParse.push_back(tempError);
 							}
 						}
 					}
 
-					// Check for END
 					if (tempToken.t_type == END) {
-						tempToken = inputScanner.tokenScan(); // Get next token, ADDED END TO TREE
+						tempToken = inputScanner.tokenScan();
 
-						// Check for IF
 						if (tempToken.t_type == IF) {
-							tempToken = inputScanner.tokenScan(); // Get next token, ADDED IF TO TREE
+							tempToken = inputScanner.tokenScan();
 						}
 						else {
-							// ERROR, NO IF FOUND IN END IF
 							ParsingError tempError("PARSE ERROR, MISSING IF IN END IF", tempToken.lineNum, tempToken.t_string);
 							ResultOfParse.push_back(tempError);
 						}
 					}
 					else {
-						// ERROR, NO END FOUND AFTER IF STATEMENT
 						ParsingError tempError("PARSE ERROR, MISSING END IN IF STATEMENT", tempToken.lineNum, tempToken.t_string);
 						ResultOfParse.push_back(tempError);
 					}
 				}
 				else {
-					// ERROR, NO THEN FOUND AFTER IF STATEMENT
 					ParsingError tempError("PARSE ERROR, MISSING THEN IN IF STATEMENT", tempToken.lineNum, tempToken.t_string);
 					ResultOfParse.push_back(tempError);
 				}
 			}
 			else {
-				// ERROR, MISSING RIGHT PARENTHESES AFTER IF STATEMENT CONDITION
 				ParsingError tempError("PARSE ERROR, MISSING ')' IN IF STATEMENT", tempToken.lineNum, tempToken.t_string);
 				ResultOfParse.push_back(tempError);
 			}
 		}
 		else {
-			// ERROR, MISSING LEFT PARENTHESE AFTER IF STATEMENT FOR CONDITION
 			ParsingError tempError("PARSE ERROR, MISSING '(' IN IF STATEMENT", tempToken.lineNum, tempToken.t_string);
 			ResultOfParse.push_back(tempError);
 		}
 	}
 	else {
-		// ERROR, MISSING IF
 		ParsingError tempError("FATAL ERROR, LOOKING FOR IF, MISSING IF", tempToken.lineNum, tempToken.t_string);
 		ResultOfParse.push_back(tempError);
 	}
@@ -887,25 +841,21 @@ DataStore Parser::Loop() {
 
 	DataStore loopData;
 
-	// Check for FOR
 	if (tempToken.t_type == FOR) {
-		tempToken = inputScanner.tokenScan(); // Get next token, ADDED FOR TO TREE
+		tempToken = inputScanner.tokenScan();
 
-		// Check for left parentheses
 		if (tempToken.t_type == PARENBEGIN) {
-			tempToken = inputScanner.tokenScan(); // Get next token, ADDED LEFT PARENTHESES TO TREE
-			Assign(true); // Run statement assignment
+			tempToken = inputScanner.tokenScan();
+			Assign(true);
 
-			// Check for SEMICOLON
 			if (tempToken.t_type == SEMICOLON) {
-				tempToken = inputScanner.tokenScan(); // Get next token, ADDED SEMICOLON TO TREE
+				tempToken = inputScanner.tokenScan();
 			}
 			else {
-				// ERROR, MISSING SEMICOLON IN FOR STATEMENT
 				ParsingError tempError("PARSE ERROR, MISSING ';' IN LOOP STATEMENT", tempToken.lineNum, tempToken.t_string);
 				ResultOfParse.push_back(tempError);
 			}
-			DataStore dataToHandle = Expr(); // Run expression procedure
+			DataStore dataToHandle = Expr();
 			if (dataToHandle.success) {
 				loopData.tempToken = dataToHandle.tempToken;
 				loopData.tempType = dataToHandle.tempType;
@@ -921,17 +871,14 @@ DataStore Parser::Loop() {
 				ResultOfParse.push_back(tempError);
 			}
 
-			// Check for right parentheses
 			if (tempToken.t_type == PARENEND) {
-				tempToken = inputScanner.tokenScan(); // Get next token, ADDED RIGHT PARENTHESES TO TREE
+				tempToken = inputScanner.tokenScan();
 
-				// Check for IDENTIFIER, IF, FOR or RETURN
 				while (tempToken.t_type == IDENTIFIER || tempToken.t_type == IF || tempToken.t_type == FOR || tempToken.t_type == RETURN) {
-					Statement(); // Run statement procedure
+					Statement();
 
-					// Check for SEMICOLON
 					if (tempToken.t_type == SEMICOLON) {
-						tempToken = inputScanner.tokenScan(); // Get next token, ADDED SEMICOLON TO TREE
+						tempToken = inputScanner.tokenScan();
 					}
 					else {
 						ParsingError tempError("PARSE ERROR, MISSING ';' IN LOOP STATEMENT", tempToken.lineNum, tempToken.t_string);
@@ -939,13 +886,11 @@ DataStore Parser::Loop() {
 					}
 				}
 
-				// Check for END
 				if (tempToken.t_type == END) {
-					tempToken = inputScanner.tokenScan(); // Get next token, ADDED END TO TREE
+					tempToken = inputScanner.tokenScan();
 
-					// Check for FOR
 					if (tempToken.t_type == FOR) {
-						tempToken = inputScanner.tokenScan(); // Get next token, ADDED FOR TO TREE
+						tempToken = inputScanner.tokenScan();
 					}
 					else {
 						ParsingError tempError("PARSE ERROR, MISSING FOR IN END FOR STATEMENT", tempToken.lineNum, tempToken.t_string);
@@ -979,12 +924,10 @@ DataStore Parser::Return() {
 
 	DataStore returnData;
 
-	// Check for RETURN
 	if (tempToken.t_type == RETURN) {
-		tempToken = inputScanner.tokenScan(); // Get next token, ADDED RETURN TO TREE
+		tempToken = inputScanner.tokenScan();
 	}
 	else {
-		// ERROR, NO RETURN FOUND
 		ParsingError tempError("FATAL ERROR, NO RETURN FOUND", tempToken.lineNum, tempToken.t_string);
 		ResultOfParse.push_back(tempError);
 	}
@@ -1008,7 +951,7 @@ DataStore Parser::Ident() {
 	DataStore identifierData;
 	identifierData.tempToken = tempToken;
 	identifierData.tempType = tempToken.t_symbol->tempSymbolType;
-	tempToken = inputScanner.tokenScan(); // Get next token, ADDED IDENTIFIER TO TREE
+	tempToken = inputScanner.tokenScan();
 	return identifierData;
 }
 
@@ -1018,13 +961,14 @@ DataStore Parser::Expr() {
 	DataStore expressionData;
 	DataStore dataToHandle;
 
-	// Check for NOT
 	if (tempToken.t_type == NOT) {
 		tempToken = inputScanner.tokenScan();
 		dataToHandle = Arith();
 		if (dataToHandle.success) {
 			expressionData = dataToHandle;
 		}
+
+		// Type check
 		if (expressionData.tempType != SYMINTEGER || expressionData.tempType != SYMBOOL) {
 			ParsingError tempError("PARSE ERROR, USAGE OF 'NOT' NOT SUPPORTED WITH NON-INT/BOOL TYPES", tempToken.lineNum, tempToken.t_string);
 			ResultOfParse.push_back(tempError);
@@ -1050,7 +994,6 @@ DataStore Parser::ExprPrime(token prevFacTok, SYMBOL_TYPES prevFacType) {
 	DataStore expressionData;
 	DataStore dataToHandle;
 
-	// Check for AND or OR
 	if (tempToken.t_type == AND || tempToken.t_type == OR) {
 		tempToken = inputScanner.tokenScan();
 		dataToHandle = Arith();
@@ -1067,6 +1010,7 @@ DataStore Parser::ExprPrime(token prevFacTok, SYMBOL_TYPES prevFacType) {
 		return expressionData;
 	}
 
+	// Type check
 	if ((prevFacType == SYMBOOL && dataToHandle.tempType == SYMBOOL) || (prevFacType == SYMINTEGER && dataToHandle.tempType == SYMINTEGER)) {
 		if (dataToHandle.tempType == SYMBOOL) {
 			expressionData.tempType = SYMBOOL;
@@ -1103,7 +1047,6 @@ DataStore Parser::ArithPrime(token prevFacTok, SYMBOL_TYPES prevFacType) {
 	DataStore arithmeticData;
 	DataStore dataToHandle;
 	 
-	// Check for ADD or SUB
 	if (tempToken.t_type == ADD || tempToken.t_type == SUB) {
 		tempToken = inputScanner.tokenScan();
 		dataToHandle = Relat();
@@ -1121,6 +1064,7 @@ DataStore Parser::ArithPrime(token prevFacTok, SYMBOL_TYPES prevFacType) {
 		return arithmeticData;
 	}
 
+	// Type check
 	if ((prevFacType == SYMINTEGER && dataToHandle.tempType == SYMINTEGER) || (prevFacType == SYMFLOAT && dataToHandle.tempType == SYMFLOAT)) {
 		if (dataToHandle.tempType == SYMINTEGER) {
 			arithmeticData.tempType = SYMINTEGER;
@@ -1164,7 +1108,6 @@ DataStore Parser::RelatPrime(token prevFacTok, SYMBOL_TYPES prevFacType) {
 	DataStore relationData;
 	DataStore dataToHandle;
 
-	// Check for relational operators
 	if (tempToken.t_type == LESS || tempToken.t_type == GREAT || tempToken.t_type == DOUBLEEQUAL || tempToken.t_type == NOTEQUAL || tempToken.t_type == LESSEQ || tempToken.t_type == GREATEQ) {
 		tempToken = inputScanner.tokenScan();
 		dataToHandle = Term();
@@ -1183,6 +1126,7 @@ DataStore Parser::RelatPrime(token prevFacTok, SYMBOL_TYPES prevFacType) {
 		return relationData;
 	}
 
+	// Type check
 	if ((prevFacType == SYMBOOL && dataToHandle.tempType == SYMBOOL) || (prevFacType == SYMINTEGER && dataToHandle.tempType == SYMINTEGER) || (prevFacType == SYMFLOAT && dataToHandle.tempType == SYMFLOAT)) {
 
 	}
@@ -1229,7 +1173,6 @@ DataStore Parser::TermPrime(token prevFacTok, SYMBOL_TYPES prevFacType) {
 	DataStore termData;
 	DataStore dataToHandle;
 
-	// Check for MULT
 	if (tempToken.t_type == MULT || tempToken.t_type == DIVIDE) {
 		tempToken = inputScanner.tokenScan();
 		dataToHandle = Factor();
@@ -1248,6 +1191,7 @@ DataStore Parser::TermPrime(token prevFacTok, SYMBOL_TYPES prevFacType) {
 		return termData;
 	}
 
+	// Type check
 	if (prevFacType == SYMINTEGER && dataToHandle.tempType == SYMINTEGER) {
 		termData.tempType = SYMINTEGER;
 	}
@@ -1273,15 +1217,13 @@ DataStore Parser::Factor() {
 	DataStore factorData;
 	DataStore dataToHandle;
 
-	// Check for left parentheses
 	if (tempToken.t_type == PARENBEGIN) {
-		tempToken = inputScanner.tokenScan(); // Get next token, ADDED LEFT PARENTHESES TO TREE
-		dataToHandle = Expr(); // Run expression procedure
+		tempToken = inputScanner.tokenScan();
+		dataToHandle = Expr();
 		if (dataToHandle.success) {
 			factorData.tempType = dataToHandle.tempType;
 		}
 
-		// Check for right parentheses
 		if (tempToken.t_type != PARENEND) {
 			ParsingError tempError("PARSE ERROR, MISSING ')' IN FACTOR", tempToken.lineNum, tempToken.t_string);
 			ResultOfParse.push_back(tempError);
@@ -1290,22 +1232,19 @@ DataStore Parser::Factor() {
 		return factorData;
 	}
 
-	// Check for SUB
 	else if (tempToken.t_type == SUB) {
-		tempToken = inputScanner.tokenScan(); // Get next token, ADDED SUB TO TREE
+		tempToken = inputScanner.tokenScan();
 
-		// Check for IDENTIFIER
 		if (tempToken.t_type == IDENTIFIER) {
-			dataToHandle = Name(); // Run name procedure
+			dataToHandle = Name();
 			if (dataToHandle.success) {
 				factorData.tempToken = dataToHandle.tempToken;
 				factorData.tempType = dataToHandle.tempType;
 			}
 		}
 
-		// Check for FLOAT OR INTEGER
 		if (tempToken.t_type == VALFLOAT || tempToken.t_type == VALINT) {
-			dataToHandle = Number(); // Run number procedure
+			dataToHandle = Number();
 			if (dataToHandle.success) {
 				factorData.tempToken = dataToHandle.tempToken;
 				if (tempToken.t_type == VALINT) {
@@ -1319,19 +1258,17 @@ DataStore Parser::Factor() {
 		return factorData;
 	}
 
-	// Check for IDENTIFIER
 	else if (tempToken.t_type == IDENTIFIER) {
-		dataToHandle = Name(); // Run name procedure
+		dataToHandle = Name();
 		if (dataToHandle.success) {
 			factorData.tempToken = dataToHandle.tempToken;
 			factorData.tempType = dataToHandle.tempType;
 		}
-		return factorData; // Return out of the function
+		return factorData;
 	}
 
-	// Check for FLOAT OR INTEGER
 	else if (tempToken.t_type == VALFLOAT || tempToken.t_type == VALINT) {
-		dataToHandle = Number(); // Run number procedure
+		dataToHandle = Number();
 		if (dataToHandle.success) {
 			factorData.tempToken = dataToHandle.tempToken;
 		}
@@ -1362,32 +1299,30 @@ DataStore Parser::Factor() {
 		}
 		else {
 		}
-		return factorData; // Return out of the function
+		return factorData;
 	}
 	else
 	{
 		factorData.success = false;
-		return factorData; // Return out of the function
+		return factorData;
 	}
 }
 
 // Name
 DataStore Parser::Name() {
 	DataStore nameData;
-	DataStore dataToHandle = Ident(); // Run identifier procedure
+	DataStore dataToHandle = Ident();
 	if (dataToHandle.success) {
 		nameData.tempToken = dataToHandle.tempToken;
 		nameData.tempType = dataToHandle.tempType;
 	}
 
-	// Check for left bracket
 	if (tempToken.t_type == BRACKBEGIN) {
-		tempToken = inputScanner.tokenScan(); // Get next token, ADDED LEFT BRACKET TO TREE
-		dataToHandle = Expr(); // Run expression procedure
+		tempToken = inputScanner.tokenScan();
+		dataToHandle = Expr();
 
-		// Check for right bracket
 		if (tempToken.t_type == BRACKEND) {
-			tempToken = inputScanner.tokenScan(); // Get next token, ADDED RIGHT BRACKET TO TREE
+			tempToken = inputScanner.tokenScan();
 		}
 		if (dataToHandle.success) {
 			if (dataToHandle.tempType != SYMINTEGER) {
@@ -1401,13 +1336,13 @@ DataStore Parser::Name() {
 		}
 		tempToken = inputScanner.tokenScan();
 	}
-	return nameData; // Return out of the function
+	return nameData;
 }
 
 // Number
 DataStore Parser::Number() {
 	DataStore numberData;
 	numberData.tempToken = tempToken;
-	tempToken = inputScanner.tokenScan(); // Get next token, ADDED NUMBER TO TREE
+	tempToken = inputScanner.tokenScan();
 	return numberData;
 }
