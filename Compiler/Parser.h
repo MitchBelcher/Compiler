@@ -8,6 +8,7 @@ An instance of Scanner, a temporary token for parsing, as well as declarations f
 #pragma once
 
 #include "Scanner.h"
+#include "CodeGen.h"
 
 #include <vector>
 
@@ -29,6 +30,7 @@ public:
 private:
 	token tempToken;
 	SymTable* symbolTable;
+	CodeGen codeGenerator;
 
 	DataStore Program();
 	DataStore ProgramHead();

@@ -48,6 +48,9 @@ DataStore Parser::Program() {
 			ParsingError tempError("FATAL ERROR, MISSING '.' FOR END OF FILE", -1, "");
 			ResultOfParse.push_back(tempError);
 		}
+		else {
+			codeGenerator.EndProgram();
+		}
 	}
 	else {
 		ParsingError tempError("PARSE ERROR, MISSING 'PROGRAM' AT FILE BEGIN", tempToken.lineNum, tempToken.t_string);
