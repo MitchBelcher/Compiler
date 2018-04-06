@@ -116,7 +116,9 @@ Symbol* SymTable::getSymbol(string id, bool onlyGlobal) {
 			symbolOut = &(iter->second);
 		}
 	}
-	
+	if (id == "print_string") {
+		return symbolOut;
+	}
 	return symbolOut;
 }
 

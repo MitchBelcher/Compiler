@@ -600,8 +600,8 @@ DataStore Parser::Assign(bool onlyAssign) {
 
 		else if (tempToken.t_type == PARENBEGIN && onlyAssign == false) {
 			tempToken = inputScanner.tokenScan();
-			destData = ArgumentList();
 
+			destData = ArgumentList();
 			if (destData.success) {
 				assignData.args = destData.args;
 			}
@@ -614,11 +614,11 @@ DataStore Parser::Assign(bool onlyAssign) {
 				ResultOfParse.push_back(tempError);
 			}
 
-			if (destData.tempToken.t_symbol->procedureParameters.size() == destData.args.size()) {
+			if (assignData.tempToken.t_symbol->procedureParameters.size() == assignData.args.size()) {
 
 				// Check parameter types
-				for (int i = 0; i < destData.procedureParameters.size(); i++) {
-					if (destData.tempToken.t_symbol->procedureParameters[i].first->tempSymbolType == destData.args[i]) {
+				for (int i = 0; i < assignData.procedureParameters.size(); i++) {
+					if (assignData.tempToken.t_symbol->procedureParameters[i].first->tempSymbolType == assignData.args[i]) {
 
 					}
 					else {
@@ -627,7 +627,7 @@ DataStore Parser::Assign(bool onlyAssign) {
 					}
 				}
 			}
-			else if (destData.tempToken.t_symbol->procedureParameters.size() > destData.args.size()) {
+			else if (assignData.tempToken.t_symbol->procedureParameters.size() > assignData.args.size()) {
 				ParsingError tempError("PARSE ERROR, TOO FEW ARGUMENTS IN PROCEDURE CALL", tempToken.lineNum, tempToken.t_string);
 				ResultOfParse.push_back(tempError);
 			}
