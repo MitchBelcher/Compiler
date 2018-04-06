@@ -3,6 +3,7 @@
 This cpp file contains the main entry point to the compiler program, setting the filepath, creating the initial scanner instance
 
 */
+
 #include "Errors.h"
 
 #include "Token.h"
@@ -28,8 +29,8 @@ int main(int argc, char *argv[]) {
 
 	SymTable symbolTable; // Create new blank symbol table
 
-	Parser fileParse(filePath, symbolTable);  // Create parser with set filepath and new blank symbol table
-	fileParse.parseFile(); // Parse the input file
+	Parser fileParse(filePath, symbolTable);	// Create parser with set filepath and new blank symbol table
+	fileParse.parseFile();						// Parse the input file
 
 	// Print out scanner errors
 	if (ResultOfScan.size() != 0) {

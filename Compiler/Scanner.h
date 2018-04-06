@@ -15,15 +15,12 @@ A function to check if a given string is a reserve word, and a temporary filestr
 
 class Scanner {
 public:
-	void init (const char* filePath, SymTable& returnedSymbolTable); // Constructor (pass filepath)
+	void init (const char* filePath, SymTable& returnedSymbolTable); // Constructor
 	~Scanner(); // Destructor
 
-	//void scanIn (const char* filePath);
 	token tokenScan (); // Scan in a token
-	vector<token> getTokens(); // Vector to get tokens out
 
 private:
-	//token tokenScan (FILE* stream);
 	vector<token> tempTokenList; // Temporary token vector
 	FILE* tempStream; // Temporary input filestream
 	SymTable* symbolTable;

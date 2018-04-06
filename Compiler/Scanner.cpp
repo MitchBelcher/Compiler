@@ -11,13 +11,8 @@ This cpp file contains the definitions for Scanner class functions, like initial
 #include <stdio.h>
 #include <iostream>
 
-int currentLineNumber = 1;
-int commentDepth = 0;
-
-// Simple function to return a list of tokens
-vector<token> Scanner::getTokens() {
-	return tempTokenList;
-}
+int currentLineNumber = 1;	// Keep track of the line number we're at in the input file
+int commentDepth = 0;		// Keep track of potential nested comments
 
 // Function to systematically scan characters to create a final token
 token Scanner::tokenScan() {
@@ -29,7 +24,7 @@ token Scanner::tokenScan() {
 	// Check for whitespace
 	while (isspace(currentChar)) {
 
-		// Newline
+		// Check for newline
 		if (currentChar == '\n') {
 			currentLineNumber++; // Increment counter for line number
 		}
@@ -57,50 +52,47 @@ token Scanner::tokenScan() {
 		tempToken.lineNum = currentLineNumber;
 	}
 
+	// Stream end
 	else if (currentChar == -1) {
 		tempToken.t_type = STREAMEND;
 	}
 
-	// Identifiers, reserve words or true/false
+	// Identifiers
 	else if (isalpha(currentChar)) {
 
-		tempToken.t_type = IDENTIFIER; // Assume the token is a identifier
-		tempToken.t_string = tolower(currentChar); // Add the current token to the string (lowercase)
-		tempToken.lineNum = currentLineNumber;
+		tempToken.t_type = IDENTIFIER;				// Assume the token is a identifier
+		tempToken.t_string = tolower(currentChar);	// Add the current token to the string (lowercase)
+		tempToken.lineNum = currentLineNumber;		// Set line number
 
-		int nextChar; // Create a placeholder for the next character
-		nextChar = getc(tempStream); // Get the next character from the stream
+		int nextChar;					// Create a placeholder for the next character
+		nextChar = getc(tempStream);	// Get the next character from the stream
 
-		// If the next character is alpha, digit or _, continue grabbing the next character and append it to the string (lowercase)
+		// If the next character is alpha, digit or _ , continue grabbing the next character and append it to the string (lowercase)
 		while (isalpha(nextChar) || isdigit(nextChar) || nextChar == '_') {
-			tempToken.t_string += tolower(nextChar); // Append lowercase to token string
-			nextChar = getc(tempStream); // Get the next character from the stream
+			tempToken.t_string += tolower(nextChar);	// Append lowercase to token string
+			nextChar = getc(tempStream);				// Get the next character from the stream
 		}
-		ungetc(nextChar, tempStream); // Put invalid character back on the tempStream
+		ungetc(nextChar, tempStream);					// Put invalid character back on the tempStream
 
-		//checkForReserves(tempToken); // Check to see if the token was a reserve word, if it wasn't no change is made
+		tempToken.t_symbol = symbolTable->getSymbol(tempToken.t_string);	// Check the symbol tables for the token
 
-		tempToken.t_symbol = symbolTable->getSymbol(tempToken.t_string);
+		// If that symbol hasn't been added yet, set type, id, global flag, and add to the appropriate symbol table
 		if (tempToken.t_symbol == nullptr) {
 			Symbol returnedSymbol;
 			returnedSymbol.tempTokenType = tempToken.t_type;
 			returnedSymbol.id = tempToken.t_string;
 			returnedSymbol.isGlobal = false;
-			//cout << "Adding symbol \t" << returnedSymbol.id << " with type\t" << returnedSymbol.tempSymbolType<< '\n';
 			tempToken.t_symbol = symbolTable->addSymbol(returnedSymbol.id, returnedSymbol, returnedSymbol.isGlobal);
 		}
-		else
-		{
-			//cout << "found symbol \t" << tempToken.t_symbol->id << " with type\t" << tempToken.t_symbol->tempSymbolType << '\n';
-		}
-		tempToken.t_type = tempToken.t_symbol->tempTokenType;
+
+		tempToken.t_type = tempToken.t_symbol->tempTokenType;	// Set token type to the type gotten from the symbol
 	}
 
 	// Characters
 	else if (currentChar == 39) {
 
-		int nextChar; // Create a placeholder for the next character
-		nextChar = getc(tempStream); // Get the next character from the stream
+		int nextChar;					// Create a placeholder for the next character
+		nextChar = getc(tempStream);	// Get the next character from the stream
 
 		// If the next character is any of the allowed characters, add it to the tokens char value, and move to the next character
 		if (isalpha(nextChar) || isdigit(nextChar) || nextChar == '_' || nextChar == ';' || nextChar == ':' || nextChar == '.' || nextChar == '"' || nextChar == ' ') {
@@ -125,15 +117,13 @@ token Scanner::tokenScan() {
 	// Strings
 	else if (currentChar == '"') {
 
-		//tempToken.t_string += currentChar; // set up token string
-
-		int nextChar; // Create a placeholder for the next character
-		nextChar = getc(tempStream); // Get the next character from the stream
+		int nextChar;					// Create a placeholder for the next character
+		nextChar = getc(tempStream);	// Get the next character from the stream
 
 		// If the next character is any valid string character, continue grabbing the next character and append it to the string
 		while (isalpha(nextChar) || isdigit(nextChar) || nextChar == '_' || nextChar == ';' || nextChar == ':' || nextChar == '.' || nextChar == ',' || nextChar == 39 || nextChar == ' ') {
 			tempToken.t_string += nextChar; // Append character to the token string 
-			nextChar = getc(tempStream); // Get the next character from the stream
+			nextChar = getc(tempStream);	// Get the next character from the stream
 		}
 
 		// Ensure the next char is a " to signal the end of the string definition
@@ -156,13 +146,13 @@ token Scanner::tokenScan() {
 
 		tempToken.t_string += currentChar; // Append first digit char to token string
 
-		int nextChar; // Create a placeholder for the next character
-		nextChar = getc(tempStream); // Get the next character from the stream
+		int nextChar;					// Create a placeholder for the next character
+		nextChar = getc(tempStream);	// Get the next character from the stream
 
 		// If next char is a digit or underscore, continue grabbing the next character and append it to the string
 		while (isdigit(nextChar) || nextChar == '_') {
 
-			// If the char is an underscore, fold it
+			// If the char is an underscore, absorb it
 			if (nextChar != '_') {
 				tempToken.t_string += nextChar;
 			}
@@ -175,30 +165,30 @@ token Scanner::tokenScan() {
 
 			tempToken.t_string += nextChar; // Append first decimal digit to the token string
 
-			nextChar = getc(tempStream); // Get the next character from the stream
+			nextChar = getc(tempStream);	// Get the next character from the stream
 
 			// If next char is a digit or underscore, continue grabbing the next character and append it to the string
 			while (isdigit(nextChar) || nextChar == '_') {
 
-				// If the char is an underscore, fold it
+				// If the char is an underscore, absorb it
 				if (nextChar != '_') {
 					tempToken.t_string += nextChar;
 				}
 
-				nextChar = getc(tempStream);// Get the next character from the stream
+				nextChar = getc(tempStream);		// Get the next character from the stream
 			}
 
-			ungetc(nextChar, tempStream); // Put invalid character back on the temp stream
-			tempToken.t_type = VALFLOAT; // Set token type to float, since we found a .
-			tempToken.lineNum = currentLineNumber;
+			ungetc(nextChar, tempStream);			// Put invalid character back on the temp stream
+			tempToken.t_type = VALFLOAT;			// Set token type to float, since we found a .
+			tempToken.lineNum = currentLineNumber;	// Set the line number
 			tempToken.t_float = (float)atof(tempToken.t_string.c_str()); // Convert to float, and save in token float element
 		}
 
 		// Never found a ., value is an integer, and has ended
 		else {
-			ungetc(nextChar, tempStream); // Put invalid character back on the temp stream
-			tempToken.t_type = VALINT; // Set token type to int, since we never found a .
-			tempToken.lineNum = currentLineNumber;
+			ungetc(nextChar, tempStream);			// Put invalid character back on the temp stream
+			tempToken.t_type = VALINT;				// Set token type to int, since we never found a .
+			tempToken.lineNum = currentLineNumber;	// Set the line number
 			tempToken.t_int = atoi(tempToken.t_string.c_str()); // Convert to integer, and save in token integer element
 		}
 
@@ -235,21 +225,21 @@ token Scanner::tokenScan() {
 	// : or :=
 	else if (currentChar == ':') {
 
-		tempToken.t_string += currentChar;
+		tempToken.t_string += currentChar;	// Append first char to token string
 
-		int nextChar;
-		nextChar = getc(tempStream);
+		int nextChar;						// Create a placeholder for the next character
+		nextChar = getc(tempStream);		// Get the next character from the stream
 
-		tempToken.lineNum = currentLineNumber;
+		tempToken.lineNum = currentLineNumber; // Set the line number
 
+		// Check if the next char is '='
 		if (nextChar == '=') {
-			tempToken.t_type = SEMIEQUAL;
-			tempToken.t_string += nextChar;
+			tempToken.t_type = SEMIEQUAL;	// Set new type
+			tempToken.t_string += nextChar;	// Append '=' to token string
 		}
-
 		else {
-			tempToken.t_type = COLON;
-			ungetc(nextChar, tempStream);
+			tempToken.t_type = COLON;		// Since no '=' was found, set type to colon
+			ungetc(nextChar, tempStream);	// Put unneeded character back on the stream
 		}
 	}
 
@@ -270,59 +260,65 @@ token Scanner::tokenScan() {
 	// = or ==
 	else if (currentChar == '=') {
 
-		tempToken.t_string += currentChar;
+		tempToken.t_string += currentChar;	//Append first char to token string
 
-		int nextChar;
-		nextChar = getc(tempStream);
+		int nextChar;						//Create a placeholder for the next character
+		nextChar = getc(tempStream);		//Get the next character from the stream
 
-		tempToken.lineNum = currentLineNumber;
+		tempToken.lineNum = currentLineNumber; // Set the line number
 
+		// Check if the next char is '='
 		if (nextChar == '=') {
-			tempToken.t_type = DOUBLEEQUAL;
+			tempToken.t_type = DOUBLEEQUAL; // Set new type
+			tempToken.t_string += nextChar;	// Append '=' to token string
 		}
 		else {
-			tempToken.t_type = EQUALS;
-			ungetc(nextChar, tempStream);
+			tempToken.t_type = EQUALS;		// Since no '=' was found, set type to equals
+			ungetc(nextChar, tempStream);	// Put unneeded character back on the stream
 		}
 	}
 
 	// < or <=
 	else if (currentChar == '<') {
 
-		tempToken.t_string += currentChar;
+		tempToken.t_string += currentChar;	//Append first char to token string
 
-		int nextChar;
-		nextChar = getc(tempStream);
+		int nextChar;						//Create a placeholder for the next character
+		nextChar = getc(tempStream);		//Get the next character from the stream
 
-		tempToken.lineNum = currentLineNumber;
+		tempToken.lineNum = currentLineNumber; // Set the line number
 
+		// Check if the next char is '='
 		if (nextChar == '=') {
-			tempToken.t_type = LESSEQ;
-		}
-		else {
-			tempToken.t_type = LESS;
-			ungetc(nextChar, tempStream);
-		}
-	}
+			tempToken.t_type = LESSEQ;		// Set new type
+			tempToken.t_string += nextChar;	// Append '=' to token string
+		}									
+		else {								
+			tempToken.t_type = LESS;		// Since no '=' was found, set type to less than
+			ungetc(nextChar, tempStream);	// Put unneeded character back on the stream
+		}									
+	}										
 
 	// > or >=
 	else if (currentChar == '>') {
 
-		tempToken.t_string += currentChar;
+		tempToken.t_string += currentChar;	//Append first char to token string
 
-		int nextChar;
-		nextChar = getc(tempStream);
+		int nextChar;						//Create a placeholder for the next character
+		nextChar = getc(tempStream);		//Get the next character from the stream
 
-		tempToken.lineNum = currentLineNumber;
+		tempToken.lineNum = currentLineNumber; // Set the line number
 
+		// Check if the next char is '='
 		if (nextChar == '=') {
-			tempToken.t_type = GREATEQ;
-		}
-		else {
-			tempToken.t_type = GREAT;
-			ungetc(nextChar, tempStream);
-		}
-	}
+			tempToken.t_type = GREATEQ;		// Set new type
+			tempToken.t_string += nextChar;	// Append '=' to token string
+		}										
+		else {									
+			tempToken.t_type = GREAT;		// Since no '=' was found, set type to greater than
+			ungetc(nextChar, tempStream);	// Put unneeded character back on the stream
+		}										
+	}											
 
 	// !=
 	else if (currentChar == '!') {
@@ -455,7 +451,7 @@ void Scanner::init(const char* filePath, SymTable& returnedSymbolTable) {
 
 	// Error in open
 	if (error != 0) {
-		// File cannot be read
+		ScannerError tempError("ERROR, INPUT FILE CANNOT BE READ", -1, "");
 	}
 
 	symbolTable = &returnedSymbolTable;
