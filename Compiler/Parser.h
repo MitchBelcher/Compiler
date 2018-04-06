@@ -9,6 +9,7 @@ An instance of Scanner, a temporary token for parsing, as well as declarations f
 
 #include "Scanner.h"
 #include "CodeGen.h"
+#include "SymTable.h"
 
 #include <vector>
 
@@ -35,7 +36,7 @@ private:
 	DataStore Program();
 	DataStore ProgramHead();
 	DataStore ProgramBody();
-	DataStore Declare();
+	DataStore Declare(bool isOnlyGlobal);
 	DataStore Statement();
 	DataStore ProcDeclare(bool isGlobal);
 	DataStore VarDeclare(bool isGlobal);

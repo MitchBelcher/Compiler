@@ -465,15 +465,3 @@ void Scanner::init(const char* filePath, SymTable& returnedSymbolTable) {
 Scanner::~Scanner() {
 	fclose(tempStream);
 }
-
-// Function to scan in each token until the end of file was reached
-//void Scanner::scanIn(const char* filePath) {
-//
-//	token firstToken = tokenScan(tempStream);
-//
-//	while (firstToken.t_type != FILEEND) {
-//		tempTokenList.push_back(firstToken);
-//		firstToken = tokenScan(tempStream);
-//	}
-//	tempTokenList.push_back(firstToken);
-//}

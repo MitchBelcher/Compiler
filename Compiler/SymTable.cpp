@@ -122,8 +122,6 @@ Symbol* SymTable::getSymbol(string id, bool onlyGlobal) {
 
 
 Symbol* SymTable::addSymbol(string id, Symbol symbolIn, bool isGlobal) {
-	
-	//cout << "adding symbol: " << id << '\t' << "TYPE: " << symbolIn.tempSymbolType << '\t' << endl;
 
 	if (isGlobal) {
 		GlobalTable.insert({ id, symbolIn });
@@ -133,7 +131,6 @@ Symbol* SymTable::addSymbol(string id, Symbol symbolIn, bool isGlobal) {
 			return &(iter->second);
 		}
 		else {
-			// ERROR, UNABLE TO ADD TO GLOBAL TABLE
 			SymbolError tempError("ERROR, UNABLE TO ADD SYMBOL TO GLOBAL TABLE", symbolIn.id);
 			ResultOfSymbol.push_back(tempError);
 		}

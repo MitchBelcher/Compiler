@@ -15,6 +15,7 @@ This cpp file contains the main entry point to the compiler program, setting the
 
 using namespace std;
 
+// Reset all error vectors
 vector<ParsingError> ResultOfParse = {};
 vector<ScannerError> ResultOfScan = {};
 vector<SymbolError> ResultOfSymbol = {};
@@ -22,36 +23,41 @@ vector<SymbolError> ResultOfSymbol = {};
 // Main
 int main(int argc, char *argv[]) {
 
-	const char* filePath = "..//testPgms//correct//test2.src"; // Filepath to read
+	const char* filePath = "..//testPgms//correct//test_heap.src"; // Filepath to read
 	//const char* filePath = "..//testPgms//incorrect//test2.src"; // Filepath to read
-	//const char* filePath = "C://Users//Guita//Downloads//type_check.src"; // Filepath to read
 
-	SymTable symbolTable;
+	SymTable symbolTable; // Create new blank symbol table
 
-	Parser fileParse(filePath, symbolTable);
-	fileParse.parseFile();
+	Parser fileParse(filePath, symbolTable);  // Create parser with set filepath and new blank symbol table
+	fileParse.parseFile(); // Parse the input file
 
 	// Print out scanner errors
-	for (int i = 0; i < ResultOfScan.size(); i++) {
-		cout << "Line #: " << ResultOfScan[i].lineNumber << '\t' << "-- " << ResultOfScan[i].scanError << " --" << '\t' << "-- Error found at/near string: " << ResultOfScan[i].tokenName << endl;
+	if (ResultOfScan.size() != 0) {
+		for (int i = 0; i < ResultOfScan.size(); i++) {
+			cout << "Line #: " << ResultOfScan[i].lineNumber << '\t' << "-- " << ResultOfScan[i].scanError << " --" << '\t' << "-- Error found at/near string: " << ResultOfScan[i].tokenName << endl;
+		}
 	}
-	if (ResultOfScan.size() == 0) {
+	else {
 		cout << "No scan errors found!" << endl;
 	}
 
 	// Print out parse errors
-	for (int i = 0; i < ResultOfParse.size(); i++) {
-		cout << "Line #: " << ResultOfParse[i].lineNumber << '\t' << "-- " << ResultOfParse[i].parseError << " --" << '\t' << "-- Error found at/near string: " << ResultOfParse[i].tokenName << endl;
+	if (ResultOfParse.size() != 0) {
+		for (int i = 0; i < ResultOfParse.size(); i++) {
+			cout << "Line #: " << ResultOfParse[i].lineNumber << '\t' << "-- " << ResultOfParse[i].parseError << " --" << '\t' << "-- Error found at/near string: " << ResultOfParse[i].tokenName << endl;
+		}
 	}
-	if (ResultOfParse.size() == 0) {
+	else {
 		cout << "No parse errors found!" << endl;
 	}
 
 	// Print out symbol errors
-	for (int i = 0; i < ResultOfSymbol.size(); i++) {
-		cout << ResultOfSymbol[i].symbolError << " --" << '\t' << "-- Error found at/near string: " << ResultOfSymbol[i].idString << endl;
+	if (ResultOfSymbol.size() != 0) {
+		for (int i = 0; i < ResultOfSymbol.size(); i++) {
+			cout << ResultOfSymbol[i].symbolError << " --" << '\t' << "-- Error found at/near string: " << ResultOfSymbol[i].idString << endl;
+		}
 	}
-	if (ResultOfSymbol.size() == 0) {
+	else {
 		cout << "No parse errors found!" << endl;
 	}
 }

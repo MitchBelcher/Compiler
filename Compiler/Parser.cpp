@@ -66,7 +66,10 @@ DataStore Parser::ProgramHead() {
 
 	if (tempToken.t_type == PROGRAM) {
 		tempToken = inputScanner.tokenScan();
-		Ident();
+		DataStore dataToHandle = Ident();
+		if (dataToHandle.success) {
+			programHeadData.tempToken = dataToHandle.tempToken;
+		}
 
 		if (tempToken.t_type == IS) {
 			tempToken = inputScanner.tokenScan();
@@ -86,7 +89,7 @@ DataStore Parser::ProgramBody() {
 
 	// Declarations
 	while (tempToken.t_type == GLOBAL || tempToken.t_type == PROCEDURE || tempToken.t_type == INTEGER || tempToken.t_type == FLOAT || tempToken.t_type == BOOL || tempToken.t_type == STRING || tempToken.t_type == CHAR) {
-		Declare();
+		Declare(true);
 
 		if (tempToken.t_type == SEMICOLON) {
 			tempToken = inputScanner.tokenScan();
@@ -101,7 +104,7 @@ DataStore Parser::ProgramBody() {
 		tempToken = inputScanner.tokenScan();
 	}
 	else {
-		ParsingError tempError("PARSE ERROR, MISSING BEGIN IN DECLARATION", tempToken.lineNum, tempToken.t_string);
+		ParsingError tempError("PARSE ERROR, MISSING BEGIN IN PROGRAM DECLARATION", tempToken.lineNum, tempToken.t_string);
 		ResultOfParse.push_back(tempError);
 	}
 
@@ -137,10 +140,10 @@ DataStore Parser::ProgramBody() {
 }
 
 // Declare
-DataStore Parser::Declare() {
+DataStore Parser::Declare(bool isOnlyGlobal) {
 
 	DataStore declarationData;
-	bool isGlobal = false;
+	bool isGlobal = isOnlyGlobal;
 
 	// Global declarations
 	if (tempToken.t_type == GLOBAL) {
@@ -356,7 +359,7 @@ DataStore Parser::ProcHead(bool isGlobal) {
 			returnedSymbol = procedureHeaderData.tempToken.t_symbol;
 		}
 
-		/*if (tempSymbol.isGlobal == returnedSymbol->isGlobal) {
+		if (tempSymbol.isGlobal == returnedSymbol->isGlobal) {
 			if (returnedSymbol->tempSymbolType == UNASSIGNED) {
 				returnedSymbol->tempSymbolType = tempSymbol.tempSymbolType;
 				returnedSymbol->procedureParameters = tempSymbol.procedureParameters;
@@ -380,13 +383,12 @@ DataStore Parser::ProcHead(bool isGlobal) {
 					ResultOfParse.push_back(tempError);
 				}
 			}
-		}*/
+		}
 
 		symbolTable->OpenScope();
 
 		if (tempToken.t_type == PARENBEGIN) {
 			tempToken = inputScanner.tokenScan();
-
 
 			if (tempToken.t_type == PARENEND) {
 				tempToken = inputScanner.tokenScan();
@@ -394,7 +396,7 @@ DataStore Parser::ProcHead(bool isGlobal) {
 			else {
 				DataStore paramListData = ParamList();
 				if (paramListData.success) {
-					tempSymbol.procedureParameters = paramListData.procedureParameters;
+					procedureHeaderData.tempToken.t_symbol->procedureParameters = paramListData.procedureParameters;
 				}
 
 				if (tempToken.t_type == PARENEND) {
@@ -403,32 +405,6 @@ DataStore Parser::ProcHead(bool isGlobal) {
 				else {
 					ParsingError tempError("PARSE ERROR, MISSING ')' IN PROCEDURE HEADER", tempToken.lineNum, tempToken.t_string);
 					ResultOfParse.push_back(tempError);
-				}
-			}
-
-			if (tempSymbol.isGlobal == returnedSymbol->isGlobal) {
-				if (returnedSymbol->tempSymbolType == UNASSIGNED) {
-					returnedSymbol->tempSymbolType = tempSymbol.tempSymbolType;
-					returnedSymbol->procedureParameters = tempSymbol.procedureParameters;
-				}
-				else {
-					ParsingError tempError("PARSE ERROR, REDECLARING LOCAL VARIABLE", tempToken.lineNum, tempToken.t_string);
-					ResultOfParse.push_back(tempError);
-				}
-			}
-			else {
-				if (tempSymbol.isGlobal == false) {
-					procedureHeaderData.tempToken.t_symbol = symbolTable->addSymbol(tempSymbol.id, tempSymbol, tempSymbol.isGlobal);
-				}
-				else {
-					Symbol* checkGlobal = symbolTable->getSymbol(tempSymbol.id, true);
-					if (checkGlobal == nullptr) {
-						procedureHeaderData.tempToken.t_symbol = symbolTable->addSymbol(tempSymbol.id, tempSymbol, tempSymbol.isGlobal);
-					}
-					else {
-						ParsingError tempError("PARSE ERROR, REDECLARING VARIABLE IN GLOBAL SCOPE", tempToken.lineNum, tempToken.t_string);
-						ResultOfParse.push_back(tempError);
-					}
 				}
 			}
 		}
@@ -451,7 +427,7 @@ DataStore Parser::ProcBody() {
 
 	// Declarations
 	while (tempToken.t_type == GLOBAL || tempToken.t_type == PROCEDURE || tempToken.t_type == INTEGER || tempToken.t_type == FLOAT || tempToken.t_type == BOOL || tempToken.t_type == STRING || tempToken.t_type == CHAR) {
-		Declare();
+		Declare(false);
 
 		if (tempToken.t_type == SEMICOLON) {
 			tempToken = inputScanner.tokenScan();
@@ -546,6 +522,11 @@ DataStore Parser::Param() {
 		parameterData.procedureParameters.push_back({ returnedSymbol, INOUTTYPE });
 		tempToken = inputScanner.tokenScan();
 	}
+
+	else {
+		ParsingError tempError("PARSE ERROR, INVALID PARAMETER TYPE", tempToken.lineNum, tempToken.t_string);
+		ResultOfParse.push_back(tempError);
+	}
 	return parameterData;
 }
 
@@ -598,8 +579,11 @@ DataStore Parser::Assign(bool onlyAssign) {
 		if (tempToken.t_type == BRACKBEGIN) {
 			tempToken = inputScanner.tokenScan();
 			dataToHandle = Expr();
+			if (dataToHandle.success) {
+				destData = dataToHandle;
+			}
 
-			if (dataToHandle.tempType != SYMINTEGER) {
+			if (destData.tempType != SYMINTEGER) {
 				ParsingError tempError("PARSE ERROR, ARRAY ACESSORS MUST BE INTEGER VALUES", tempToken.lineNum, tempToken.t_string);
 				ResultOfParse.push_back(tempError);
 			}
@@ -619,7 +603,7 @@ DataStore Parser::Assign(bool onlyAssign) {
 			destData = ArgumentList();
 
 			if (destData.success) {
-				destData.args = destData.args;
+				assignData.args = destData.args;
 			}
 
 			if (tempToken.t_type == PARENEND) {
@@ -709,7 +693,7 @@ DataStore Parser::ArgumentList() {
 	DataStore argumentListData;
 	DataStore dataToHandle = Expr();
 	if (dataToHandle.success) {
-		dataToHandle.args.push_back(dataToHandle.tempType);
+		argumentListData.args.push_back(dataToHandle.tempType);
 	}
 
 	// Multiple arguments
@@ -717,7 +701,7 @@ DataStore Parser::ArgumentList() {
 		tempToken = inputScanner.tokenScan();
 		dataToHandle = ArgumentList();
 		if (dataToHandle.success) {
-			dataToHandle.args.insert(dataToHandle.args.end(), dataToHandle.args.begin(), dataToHandle.args.end());
+			argumentListData.args.insert(argumentListData.args.end(), dataToHandle.args.begin(), dataToHandle.args.end());
 		}
 	}
 	return argumentListData;
