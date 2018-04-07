@@ -25,6 +25,6 @@ end procedure;
 begin
 
 Fib(15, value);
-putInteger(value);
+//putInteger(value);
 
 end program.

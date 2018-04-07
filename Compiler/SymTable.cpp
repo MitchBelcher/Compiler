@@ -88,6 +88,56 @@ SymTable::SymTable() {
 	reserveSymbol.tempTokenType = INTEGER;
 	addSymbol(reserveSymbol.id, reserveSymbol, true);
 
+
+
+
+
+	reserveSymbol.id = "putinteger";
+	reserveSymbol.tempTokenType = PUTINTEGER;
+	addSymbol(reserveSymbol.id, reserveSymbol, true);
+
+	reserveSymbol.id = "putfloat";
+	reserveSymbol.tempTokenType = PUTFLOAT;
+	addSymbol(reserveSymbol.id, reserveSymbol, true);
+
+	reserveSymbol.id = "putchar";
+	reserveSymbol.tempTokenType = PUTCHAR;
+	addSymbol(reserveSymbol.id, reserveSymbol, true);
+
+	reserveSymbol.id = "putbool";
+	reserveSymbol.tempTokenType = PUTBOOL;
+	addSymbol(reserveSymbol.id, reserveSymbol, true);
+
+	reserveSymbol.id = "putstring";
+	reserveSymbol.tempTokenType = PUTSTRING;
+	addSymbol(reserveSymbol.id, reserveSymbol, true);
+
+	reserveSymbol.id = "getinteger";
+	reserveSymbol.tempTokenType = GETINTEGER;
+	addSymbol(reserveSymbol.id, reserveSymbol, true);
+
+	reserveSymbol.id = "getfloat";
+	reserveSymbol.tempTokenType = GETFLOAT;
+	addSymbol(reserveSymbol.id, reserveSymbol, true);
+
+	reserveSymbol.id = "getchar";
+	reserveSymbol.tempTokenType = GETCHAR;
+	addSymbol(reserveSymbol.id, reserveSymbol, true);
+
+	reserveSymbol.id = "getbool";
+	reserveSymbol.tempTokenType = GETBOOL;
+	addSymbol(reserveSymbol.id, reserveSymbol, true);
+
+	reserveSymbol.id = "getstring";
+	reserveSymbol.tempTokenType = GETSTRING;
+	addSymbol(reserveSymbol.id, reserveSymbol, true);
+
+
+
+
+
+
+
 	reserveSymbol.id = "true";
 	reserveSymbol.tempTokenType = TRUE;
 	reserveSymbol.tempSymbolType = SYMBOOL;

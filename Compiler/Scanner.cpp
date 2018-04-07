@@ -323,16 +323,20 @@ token Scanner::tokenScan() {
 	// !=
 	else if (currentChar == '!') {
 
-		tempToken.t_string += currentChar;
+		tempToken.t_string += currentChar;	// Append first char to token string
 
-		int nextChar;
-		nextChar = getc(tempStream);
+		int nextChar;						// Create a placeholder for the next character
+		nextChar = getc(tempStream);		// Get the next character from the stream
 
-		tempToken.lineNum = currentLineNumber;
+		tempToken.lineNum = currentLineNumber;  // Set the line number
 
+		// Check if the next char if '='
 		if (nextChar == '=') {
-			tempToken.t_type = NOTEQUAL;
+			tempToken.t_type = NOTEQUAL;	// Set new type
+			tempToken.t_string += nextChar;	// Append '=' to token string
 		}
+
+		// Since no '=' was found, set the type to invalid, as '!' is not a valid token or character, put the unneeded character back on the stream
 		else {
 			tempToken.t_type = INVALID;
 			ScannerError tempError("ERROR, INVALID USE OF '!'", tempToken.lineNum, tempToken.t_string);
@@ -370,24 +374,27 @@ token Scanner::tokenScan() {
 		nextChar = getc(tempStream);
 		tempToken.lineNum = currentLineNumber;
 
+		// Found "//", meaning begin of inline comment
 		if (nextChar == '/') {
 
+			// Keep absorbing the text until we reach the end of the line
 			while (nextChar != '\n') {
 				tempToken.t_string += nextChar;
 				nextChar = getc(tempStream);
 			}
 
-			ungetc(nextChar, tempStream);
+			ungetc(nextChar, tempStream);	// We reached the end of the line, put the unneeded character back on the stream
 
-			tempToken = tokenScan();
+			tempToken = tokenScan();		// Get the next character
 		}
 
-		// Found block comment start
+		// Found "/*", meaning begin of block comment
 		else if (nextChar == '*') {
 			tempToken.t_string += nextChar;
-			commentDepth++;
+			commentDepth++;					// We have begun a block comment, keep track of current depth to allow for nested block comments
 			nextChar = getc(tempStream);
 
+			// Keep absorbing the text until the comment depth has reached 0, or we reach the end of the stream
 			while (commentDepth != 0 && nextChar != -1) {
 				tempToken.t_string += nextChar;
 
@@ -395,32 +402,35 @@ token Scanner::tokenScan() {
 					tempToken.t_string += nextChar;
 					nextChar = getc(tempStream);
 					if (nextChar == '/') {
-						commentDepth--;
+						commentDepth--;		// "*/" found, meaning end of block comment segment, decrement depth variable
 					}
 				}
 				else if (nextChar == '/') {
 					tempToken.t_string += nextChar;
 					nextChar = getc(tempStream);
 					if (nextChar == '*') {
-						commentDepth++;
+						commentDepth++;		// "/*" found, meaning beginning of another block comment segment, increment depth variable
 					}
 				}
 				else if (nextChar == '\n') {
-					currentLineNumber++;
+					currentLineNumber++;	// Found end of line, but comment depth must still be != 0, increment line number and continue
 				}
 				nextChar = getc(tempStream);
 			}
-			ungetc(nextChar, tempStream);
+			ungetc(nextChar, tempStream); // Put the unneeded character back on the stream
 
+			// If we have somehow finished the while loop, but comment depth has some value, the token is invalid
 			if (commentDepth > 0) {
 				tempToken.t_type = INVALID;
 			}
 
+			// If we finish the loop, and comment depth is 0, we can move on
 			else if (commentDepth == 0) {
 				tempToken = tokenScan();
 			}
 		}
 
+		// Only found "/", meaning division symbol
 		else {
 			tempToken.t_type = DIVIDE;
 			tempToken.t_char = currentChar;
@@ -428,7 +438,7 @@ token Scanner::tokenScan() {
 		}
 	}
 
-	// Invalid char
+	// Invalid character, print error
 	else {
 		tempToken.t_type = INVALID;
 		tempToken.t_char = currentChar;
@@ -437,6 +447,7 @@ token Scanner::tokenScan() {
 		ResultOfScan.push_back(tempError);
 	}
 
+	// If we found an invalid token, get the next token in the hopes it isn't also invalid
 	if (tempToken.t_type == INVALID) {
 		tempToken = tokenScan();
 	}

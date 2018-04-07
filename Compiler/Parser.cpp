@@ -44,6 +44,7 @@ DataStore Parser::Program() {
 		ProgramHead();
 		ProgramBody();
 
+		// Check for '.' for file end signature, if not there, error
 		if (tempToken.t_type != FILEEND) {
 			ParsingError tempError("FATAL ERROR, MISSING '.' FOR END OF FILE", -1, "");
 			ResultOfParse.push_back(tempError);
@@ -66,7 +67,7 @@ DataStore Parser::ProgramHead() {
 
 	if (tempToken.t_type == PROGRAM) {
 		tempToken = inputScanner.tokenScan();
-		DataStore dataToHandle = Ident();
+		DataStore dataToHandle = Ident();		// Get the programs identifier
 		if (dataToHandle.success) {
 			programHeadData.tempToken = dataToHandle.tempToken;
 		}
@@ -89,7 +90,7 @@ DataStore Parser::ProgramBody() {
 
 	// Declarations
 	while (tempToken.t_type == GLOBAL || tempToken.t_type == PROCEDURE || tempToken.t_type == INTEGER || tempToken.t_type == FLOAT || tempToken.t_type == BOOL || tempToken.t_type == STRING || tempToken.t_type == CHAR) {
-		Declare(true);
+		Declare(true);	// Declaring global identifier since outside of procedures
 
 		if (tempToken.t_type == SEMICOLON) {
 			tempToken = inputScanner.tokenScan();
@@ -205,7 +206,7 @@ DataStore Parser::ProcDeclare(bool isGlobal) {
 	DataStore procedureDeclarationData;
 	ProcHead(isGlobal);
 	ProcBody();
-	symbolTable->CloseScope();
+	symbolTable->CloseScope();	// Procedure definition over, close it's scope
 	return procedureDeclarationData;
 }
 
@@ -216,30 +217,33 @@ DataStore Parser::VarDeclare(bool isGlobal) {
 
 	Symbol tempSymbol;
 	tempSymbol.isGlobal = isGlobal;
-	DataStore dataToHandle = TypeMark();
+	DataStore dataToHandle = TypeMark();	// Get the type of the variable
 	if (dataToHandle.success) {
 		tempSymbol.tempSymbolType = dataToHandle.tempType;
 	}
 
 	Symbol* returnedSymbol = nullptr;
-	dataToHandle = Ident();
+	dataToHandle = Ident();					// Get the identifier of the variable
 	variableDeclarationData.tempToken = dataToHandle.tempToken;
 	if (dataToHandle.success) {
 		tempSymbol.id = variableDeclarationData.tempToken.t_string;
 		returnedSymbol = variableDeclarationData.tempToken.t_symbol;
 	}
 
+	// Variable declaration is an array
 	if (tempToken.t_type == BRACKBEGIN) {
 		tempToken = inputScanner.tokenScan();
 
-		// Check for negative bound
+		// Check for negative lower bound of the array, if found, set flag
 		if (tempToken.t_type == SUB) {
 			tempToken = inputScanner.tokenScan();
 			negBound = true;
 		}
-		dataToHandle = Number();
+		dataToHandle = Number();	// Get the lower bound number value
 		
 		if (dataToHandle.success) {
+
+			// Check that lower bound is an integer value, if not, error
 			if (dataToHandle.tempToken.t_type != VALINT) {
 				ParsingError tempError("PARSE ERROR, LOWER ARRAY BOUND MUST BE INT", tempToken.lineNum, tempToken.t_string);
 				ResultOfParse.push_back(tempError);
@@ -247,45 +251,56 @@ DataStore Parser::VarDeclare(bool isGlobal) {
 			else {
 				variableDeclarationData.tempToken = dataToHandle.tempToken;
 
-				// If the bound is negative, reflect that in the token and the array bound for the symbol
+				// If the lower bound is negative, set the tokens value to negative
 				if (negBound) {
 					variableDeclarationData.tempToken.t_int = dataToHandle.tempToken.t_int * -1;
 				}
-				tempSymbol.arrayLower = dataToHandle.tempToken.t_int;
+				tempSymbol.arrayLower = dataToHandle.tempToken.t_int;	// Set lower bound of symbol
 			}
 		}
 
+		// Check that there is a colon between array bounds in declaration
 		if (tempToken.t_type == COLON) {
 			tempToken = inputScanner.tokenScan();
 
-			// Check for negative bound
+			// If the lower bound was negative, reset flag
+			if (negBound) {
+				negBound = false;
+			}
+
+			// Check for negative upper bound of the array, if found, set flag
 			if (tempToken.t_type == SUB) {
 				tempToken = inputScanner.tokenScan();
 				negBound = true;
 			}
-			dataToHandle = Number();
+			dataToHandle = Number();	// Get the upper bound number value
 
 			if (dataToHandle.success) {
+
+				// Check that upper bound is an integer value, if not, error
 				if (dataToHandle.tempToken.t_type != VALINT) {
 					ParsingError tempError("PARSE ERROR, UPPER ARRAY BOUND MUST BE INT", tempToken.lineNum, tempToken.t_string);
 					ResultOfParse.push_back(tempError);
 				}
 				else {
+
+					// Check that the upper bouond is larger than the lower bound, if not, error
 					if (!(tempSymbol.arrayLower < dataToHandle.tempToken.t_int)) {
 						ParsingError tempError("PARSE ERROR, UPPER ARRAY BOUND MUST BE GREATER THAN LOWER", tempToken.lineNum, tempToken.t_string);
 						ResultOfParse.push_back(tempError);
 					}
 					else {
 
-						// If the bound is negative, reflect that in the token and the array bound for the symbol
+						// If the upper bound is negative, set the tokens value to negative
 						if (negBound) {
 							variableDeclarationData.tempToken.t_int = dataToHandle.tempToken.t_int * -1;
 						}
-						tempSymbol.arrayUpper = dataToHandle.tempToken.t_int;
+						tempSymbol.arrayUpper = dataToHandle.tempToken.t_int;	// Set upper bound of symbol
 					}
 				}
 			}
 
+			// Check for end bracket to array declaration, set token array flag
 			if (tempToken.t_type == BRACKEND) {
 				tempSymbol.isArray = true;
 				tempToken = inputScanner.tokenScan();
@@ -301,27 +316,40 @@ DataStore Parser::VarDeclare(bool isGlobal) {
 		}
 	}
 
+	// Check symbol global flags
 	if (tempSymbol.isGlobal == returnedSymbol->isGlobal) {
+
+		// Check is symbol is new, if so, set values
 		if (returnedSymbol->tempSymbolType == UNASSIGNED) {
 			returnedSymbol->tempSymbolType = tempSymbol.tempSymbolType;
 			returnedSymbol->isArray = tempSymbol.isArray;
 			returnedSymbol->arrayLower = tempSymbol.arrayLower;
 			returnedSymbol->arrayUpper = tempSymbol.arrayUpper;
 		}
+
+		// Symbol is not new, redeclaration of local variable
 		else {
 			ParsingError tempError("PARSE ERROR, REDECLARING LOCAL VARIABLE", tempToken.lineNum, tempToken.t_string);
 			ResultOfParse.push_back(tempError);
 		}
 	}
 	else {
+
+		// Check if symbol is not global, if not, add it to the symbol table
 		if (tempSymbol.isGlobal == false) {
 			variableDeclarationData.tempToken.t_symbol = symbolTable->addSymbol(tempSymbol.id, tempSymbol, tempSymbol.isGlobal);
 		}
+
+		// Symbol is intended to be global
 		else {
-			Symbol* checkGlobal = symbolTable->getSymbol(tempSymbol.id, true);
+			Symbol* checkGlobal = symbolTable->getSymbol(tempSymbol.id, true);	// Check to see if symbol exists in global scope
+
+			// Symbol was not already in global scope, add it
 			if (checkGlobal == nullptr) {
 				variableDeclarationData.tempToken.t_symbol = symbolTable->addSymbol(tempSymbol.id, tempSymbol, tempSymbol.isGlobal);
 			}
+
+			// Symbol was in global scope, but new symbol is unassigned, set values
 			else {
 				if (returnedSymbol->tempSymbolType == UNASSIGNED) {
 					returnedSymbol->tempSymbolType = tempSymbol.tempSymbolType;
@@ -329,6 +357,8 @@ DataStore Parser::VarDeclare(bool isGlobal) {
 					returnedSymbol->arrayLower = tempSymbol.arrayLower;
 					returnedSymbol->arrayUpper = tempSymbol.arrayUpper;
 				}
+
+				// Symbol is redeclaration of global variable
 				else {
 					ParsingError tempError("PARSE ERROR, REDECLARING VARIABLE IN GLOBAL SCOPE", tempToken.lineNum, tempToken.t_string);
 					ResultOfParse.push_back(tempError);
@@ -352,32 +382,45 @@ DataStore Parser::ProcHead(bool isGlobal) {
 		tempSymbol.tempSymbolType = PROC;
 
 		Symbol* returnedSymbol = nullptr;
-		DataStore dataToHandle = Ident();
+		DataStore dataToHandle = Ident();	// Get the procedures identifier
 		procedureHeaderData.tempToken = dataToHandle.tempToken;
 		if (dataToHandle.success) {
 			tempSymbol.id = procedureHeaderData.tempToken.t_string;
 			returnedSymbol = procedureHeaderData.tempToken.t_symbol;
 		}
 
+		// Check symbol global flags
 		if (tempSymbol.isGlobal == returnedSymbol->isGlobal) {
+
+			// Check if symbol is new, if so, set the type to procedure and set the parameters
 			if (returnedSymbol->tempSymbolType == UNASSIGNED) {
 				returnedSymbol->tempSymbolType = tempSymbol.tempSymbolType;
 				returnedSymbol->procedureParameters = tempSymbol.procedureParameters;
 			}
+
+			// Procedure has already been declared in this scope, error
 			else {
 				ParsingError tempError("PARSE ERROR, REDECLARING PROCEDURE", tempToken.lineNum, tempToken.t_string);
 				ResultOfParse.push_back(tempError);
 			}
 		}
+
+		// Check if symbol is not global, if not, add it to the symbol table
 		else {
 			if (tempSymbol.isGlobal == false) {
 				procedureHeaderData.tempToken.t_symbol = symbolTable->addSymbol(tempSymbol.id, tempSymbol, tempSymbol.isGlobal);
 			}
+
+			// Symbol is intended to be global
 			else {
-				Symbol* checkGlobal = symbolTable->getSymbol(tempSymbol.id, true);
+				Symbol* checkGlobal = symbolTable->getSymbol(tempSymbol.id, true);	// Check to see if symbol for procedure exists in global scope
+
+				// Symbol did not exist in global scope, add it
 				if (checkGlobal == nullptr) {
 					procedureHeaderData.tempToken.t_symbol = symbolTable->addSymbol(tempSymbol.id, tempSymbol, tempSymbol.isGlobal);
 				}
+
+				// Procedure symbol is redeclaration of global scope
 				else {
 					ParsingError tempError("PARSE ERROR, REDECLARING PROCEDURE IN GLOBAL SCOPE", tempToken.lineNum, tempToken.t_string);
 					ResultOfParse.push_back(tempError);
@@ -385,20 +428,24 @@ DataStore Parser::ProcHead(bool isGlobal) {
 			}
 		}
 
-		symbolTable->OpenScope();
+		symbolTable->OpenScope();	//	Open new scope for the procedure
 
 		if (tempToken.t_type == PARENBEGIN) {
 			tempToken = inputScanner.tokenScan();
 
+			// Check for ')', meaning there are no parameters for the procedure
 			if (tempToken.t_type == PARENEND) {
 				tempToken = inputScanner.tokenScan();
 			}
+
+			// There are parameters for this procedure
 			else {
-				DataStore paramListData = ParamList();
+				DataStore paramListData = ParamList();	// Get the parameters for the procedure
 				if (paramListData.success) {
 					procedureHeaderData.tempToken.t_symbol->procedureParameters = paramListData.procedureParameters;
 				}
 
+				// Check for ')' to end procedure declaration
 				if (tempToken.t_type == PARENEND) {
 					tempToken = inputScanner.tokenScan();
 				}
@@ -427,7 +474,7 @@ DataStore Parser::ProcBody() {
 
 	// Declarations
 	while (tempToken.t_type == GLOBAL || tempToken.t_type == PROCEDURE || tempToken.t_type == INTEGER || tempToken.t_type == FLOAT || tempToken.t_type == BOOL || tempToken.t_type == STRING || tempToken.t_type == CHAR) {
-		Declare(false);
+		Declare(false);	// Begin declaration, assume token is not global
 
 		if (tempToken.t_type == SEMICOLON) {
 			tempToken = inputScanner.tokenScan();
@@ -481,16 +528,16 @@ DataStore Parser::ProcBody() {
 DataStore Parser::ParamList() {
 	DataStore parameterListData;
 
-	DataStore dataFromParam = Param();
+	DataStore dataFromParam = Param();	// Get the parameter type
 	if (dataFromParam.success) {
 		parameterListData.procedureParameters.push_back(dataFromParam.procedureParameters[0]);
 	}
 
-	// Multiple parameters
+	// Check for comma, if one is found, there are multiple parameters
 	if (tempToken.t_type == COMMA) {
 		tempToken = inputScanner.tokenScan();
 
-		dataFromParam = ParamList();
+		dataFromParam = ParamList();	// Recursively call this function to continue getting the parameter types
 		if (dataFromParam.success) {
 			parameterListData.procedureParameters.insert(parameterListData.procedureParameters.end(), dataFromParam.procedureParameters.begin(), dataFromParam.procedureParameters.end());
 		}
@@ -503,26 +550,30 @@ DataStore Parser::Param() {
 	DataStore parameterData;
 
 	Symbol* returnedSymbol = nullptr;
-	DataStore dataFromVariableDeclaration = VarDeclare(false);
+	DataStore dataFromVariableDeclaration = VarDeclare(false);	// Get variable declaration from inside parameter list, which cannot be global
 	if (dataFromVariableDeclaration.success) {
 		returnedSymbol = dataFromVariableDeclaration.tempToken.t_symbol;
 	}
 
+	// Parameter is IN type
 	if (tempToken.t_type == IN) {
 		parameterData.procedureParameters.push_back({ returnedSymbol, INTYPE });
 		tempToken = inputScanner.tokenScan();
 	}
 
+	// Parameter is OUT type
 	else if (tempToken.t_type == OUT) {
 		parameterData.procedureParameters.push_back({ returnedSymbol, OUTTYPE });
 		tempToken = inputScanner.tokenScan();
 	}
 
+	// Parameter is INOUT type
 	else if (tempToken.t_type == INOUT) {
 		parameterData.procedureParameters.push_back({ returnedSymbol, INOUTTYPE });
 		tempToken = inputScanner.tokenScan();
 	}
 
+	// No valid parameter type found, error
 	else {
 		ParsingError tempError("PARSE ERROR, INVALID PARAMETER TYPE", tempToken.lineNum, tempToken.t_string);
 		ResultOfParse.push_back(tempError);
@@ -535,26 +586,37 @@ DataStore Parser::TypeMark() {
 
 	DataStore typeData;
 
+	// Symbol is an integer
 	if (tempToken.t_type == INTEGER) {
 		typeData.tempType = SYMINTEGER;
 		tempToken = inputScanner.tokenScan();
 	}
+
+	// Symbol is a float
 	else if (tempToken.t_type == FLOAT) {
 		typeData.tempType = SYMFLOAT;
 		tempToken = inputScanner.tokenScan();
 	}
+
+	// Symbol is a boolean
 	else if (tempToken.t_type == BOOL) {
 		typeData.tempType = SYMBOOL;
 		tempToken = inputScanner.tokenScan();
 	}
+
+	// Symbol is a character
 	else if (tempToken.t_type == CHAR) {
 		typeData.tempType = SYMCHAR;
 		tempToken = inputScanner.tokenScan();
 	}
+
+	// Symbol is a string
 	else if (tempToken.t_type == STRING) {
 		typeData.tempType = SYMSTRING;
 		tempToken = inputScanner.tokenScan();
 	}
+
+	// No valid type found, error
 	else {
 		ParsingError tempError("PARSE ERROR, NO VALID TYPE DECLARED", tempToken.lineNum, tempToken.t_string);
 		ResultOfParse.push_back(tempError);
@@ -569,20 +631,22 @@ DataStore Parser::Assign(bool onlyAssign) {
 	DataStore destData;
 
 	if (tempToken.t_type == IDENTIFIER) {
-		DataStore dataToHandle = Ident();
+		DataStore dataToHandle = Ident();	//	Get the identifier
 		if (dataToHandle.success) {
 			assignData.tempToken = dataToHandle.tempToken;
 			assignData.tempType = dataToHandle.tempType;
 			destData = dataToHandle;
 		}
 
+		// Check for '[', meaning we are assigning an array value
 		if (tempToken.t_type == BRACKBEGIN) {
 			tempToken = inputScanner.tokenScan();
-			dataToHandle = Expr();
+			dataToHandle = Expr();	// Get the expression from inside the brackets
 			if (dataToHandle.success) {
 				destData = dataToHandle;
 			}
 
+			// Check that array index is an integer, if not, error
 			if (destData.tempType != SYMINTEGER) {
 				ParsingError tempError("PARSE ERROR, ARRAY ACESSORS MUST BE INTEGER VALUES", tempToken.lineNum, tempToken.t_string);
 				ResultOfParse.push_back(tempError);
@@ -598,14 +662,16 @@ DataStore Parser::Assign(bool onlyAssign) {
 			}
 		}
 
+		// Check for '(', meaning we are calling a procedure
 		else if (tempToken.t_type == PARENBEGIN && onlyAssign == false) {
 			tempToken = inputScanner.tokenScan();
 
-			destData = ArgumentList();
+			destData = ArgumentList();	// Get the list of arguments for the procedure call
 			if (destData.success) {
 				assignData.args = destData.args;
 			}
 
+			// Check for ')', meaning the procedure call is done, if not present, error
 			if (tempToken.t_type == PARENEND) {
 				tempToken = inputScanner.tokenScan();
 			}
@@ -614,31 +680,42 @@ DataStore Parser::Assign(bool onlyAssign) {
 				ResultOfParse.push_back(tempError);
 			}
 
+			// Check that the number of arguments in the procedure call line up with the number of parameters the procedure is declared to accept
 			if (assignData.tempToken.t_symbol->procedureParameters.size() == assignData.args.size()) {
 
-				// Check parameter types
+				// Loop through each parameter
 				for (int i = 0; i < assignData.procedureParameters.size(); i++) {
+
+					// Check that the types of each parameter match with the corresponding argument in the procedure call
 					if (assignData.tempToken.t_symbol->procedureParameters[i].first->tempSymbolType == assignData.args[i]) {
 
 					}
+
+					// At least one argument for procedure call does not match the parameter type in the procedure declaration, error
 					else {
 						ParsingError tempError("PARSE ERROR, MISMATCHED PROCEDURE PARAMETER TYPES", tempToken.lineNum, tempToken.t_string);
 						ResultOfParse.push_back(tempError);
 					}
 				}
 			}
+
+			// If there are more parameters in the procedure declaration than there are arguments in the procedure call, error
 			else if (assignData.tempToken.t_symbol->procedureParameters.size() > assignData.args.size()) {
 				ParsingError tempError("PARSE ERROR, TOO FEW ARGUMENTS IN PROCEDURE CALL", tempToken.lineNum, tempToken.t_string);
 				ResultOfParse.push_back(tempError);
 			}
+
+			// If there are more arguments in the procedure call than there are parameters in the procedure declaration, error
 			else {
 				ParsingError tempError("PARSE ERROR, TOO MANY ARGUMENTS IN PROCEDURE CALL", tempToken.lineNum, tempToken.t_string);
 				ResultOfParse.push_back(tempError);
 			}
 		}
+
+		// We are assigning a simple variable
 		else {
 			if (tempToken.t_type == SEMIEQUAL) {
-				AssignState(destData.tempToken, destData.tempType);
+				AssignState(destData.tempToken, destData.tempType);	// Go into variable assignment function, passing the token and it's type in
 			}
 			else {
 				ParsingError tempError("PARSE ERROR, MISSING ':=' IN ASSIGNMENT", tempToken.lineNum, tempToken.t_string);
@@ -657,24 +734,33 @@ DataStore Parser::AssignState(token destTok, SYMBOL_TYPES destType) {
 
 	if (tempToken.t_type == SEMIEQUAL) {
 		tempToken = inputScanner.tokenScan();
-		dataToHandle = Expr();
+		dataToHandle = Expr();	// Get the expression on the right of the ":=", and save that token and it's type
 		if (dataToHandle.success) {
 			assignStateData.tempToken = dataToHandle.tempToken;
 			assignStateData.tempType = dataToHandle.tempType;
 		}
 
+		// If the types of both assignment variables are the same, no conversion required, simple assignment
 		if (destType == dataToHandle.tempType) {
 
 		}
+
+		// Second type is either a float or a boolean and must be converted to an integer for assignment
 		else if ((destType == SYMINTEGER && dataToHandle.tempType == SYMFLOAT) || (destType == SYMINTEGER && dataToHandle.tempType == SYMBOOL)) {
 
 		}
+
+		// Must convert first variable to a float
 		else if (destType == SYMFLOAT && dataToHandle.tempType == SYMINTEGER) {
 
 		}
+
+		// Must convert first variable to a boolean
 		else if (destType == SYMBOOL && dataToHandle.tempType == SYMINTEGER) {
 
 		}
+
+		// The types on either side of the assignment are invalid to be assigned to one another per language specification
 		else {
 			ParsingError tempError("PARSE ERROR, INCOMPATIBLE TYPES IN ASSIGNMENT", tempToken.lineNum, tempToken.t_string);
 			ResultOfParse.push_back(tempError);
@@ -691,15 +777,15 @@ DataStore Parser::AssignState(token destTok, SYMBOL_TYPES destType) {
 DataStore Parser::ArgumentList() {
 
 	DataStore argumentListData;
-	DataStore dataToHandle = Expr();
+	DataStore dataToHandle = Expr();	// Get the argument expression
 	if (dataToHandle.success) {
 		argumentListData.args.push_back(dataToHandle.tempType);
 	}
 
-	// Multiple arguments
+	// Check for comma, if one is found there are multiple arguments
 	if (tempToken.t_type == COMMA) {
 		tempToken = inputScanner.tokenScan();
-		dataToHandle = ArgumentList();
+		dataToHandle = ArgumentList();	// Recursively call this function to continue getting the arguments
 		if (dataToHandle.success) {
 			argumentListData.args.insert(argumentListData.args.end(), dataToHandle.args.begin(), dataToHandle.args.end());
 		}
@@ -717,28 +803,34 @@ DataStore Parser::If() {
 
 		if (tempToken.t_type == PARENBEGIN) {
 			tempToken = inputScanner.tokenScan();
-			DataStore dataToHandle = Expr();
+			DataStore dataToHandle = Expr();	// Get the expression within the "if" conditional
 			if (dataToHandle.success) {
 				ifData.tempToken = dataToHandle.tempToken;
 				ifData.tempType = dataToHandle.tempType;
 			}
 
+			// Check that the expression in the "if" conditional can resolve to boolean
 			if (dataToHandle.tempType == SYMBOOL || dataToHandle.tempType == SYMINTEGER) {
+
+				// Expression is an integer, must convert to a boolean
 				if (dataToHandle.tempType == SYMINTEGER) {
 
 				}
 			}
+
+			// The "if" conditionals expression cannot resolve to a boolean value
 			else {
 				ParsingError tempError("PARSE ERROR, IF CONDITION MUST RESOLVE TO A BOOLEAN", tempToken.lineNum, tempToken.t_string);
 				ResultOfParse.push_back(tempError);
 			}
 
+			// Check for ')', meaning end of the conditional
 			if (tempToken.t_type == PARENEND) {
 				tempToken = inputScanner.tokenScan();
 
 				if (tempToken.t_type == THEN) {
 					tempToken = inputScanner.tokenScan();
-					Statement();
+					Statement();	// Get the first statement within the if section
 
 					if (tempToken.t_type == SEMICOLON) {
 						tempToken = inputScanner.tokenScan();
@@ -748,6 +840,7 @@ DataStore Parser::If() {
 						ResultOfParse.push_back(tempError);
 					}
 
+					// So long as there are more identifiers found, nested if conditions found, for loops found, or a return statement found, keep getting those statements
 					while (tempToken.t_type == IDENTIFIER || tempToken.t_type == IF || tempToken.t_type == FOR || tempToken.t_type == RETURN) {
 						Statement();
 
@@ -755,14 +848,15 @@ DataStore Parser::If() {
 							tempToken = inputScanner.tokenScan();
 						}
 						else {
-							ParsingError tempError("PARSE ERROR, MISSING ';' AFTER IDENT/IF/FOR/RETURN IN STATEMENT", tempToken.lineNum, tempToken.t_string);
+							ParsingError tempError("PARSE ERROR, MISSING ';' AFTER IDENTIFER/IF/FOR/RETURN IN STATEMENT", tempToken.lineNum, tempToken.t_string);
 							ResultOfParse.push_back(tempError);
 						}
 					}
 
+					// Check for else condition
 					if (tempToken.t_type == ELSE) {
 						tempToken = inputScanner.tokenScan();
-						Statement();
+						Statement();	// Get the first statement within the else condition
 
 						if (tempToken.t_type == SEMICOLON) {
 							tempToken = inputScanner.tokenScan();
@@ -772,6 +866,7 @@ DataStore Parser::If() {
 							ResultOfParse.push_back(tempError);
 						}
 
+						// So long as there are more identifiers found, nested if conditions found, for loops found, or a return statement found, keep getting those statements
 						while (tempToken.t_type == IDENTIFIER || tempToken.t_type == IF || tempToken.t_type == FOR || tempToken.t_type == RETURN) {
 							Statement();
 
@@ -785,6 +880,7 @@ DataStore Parser::If() {
 						}
 					}
 
+					// Check for end of if statement
 					if (tempToken.t_type == END) {
 						tempToken = inputScanner.tokenScan();
 
