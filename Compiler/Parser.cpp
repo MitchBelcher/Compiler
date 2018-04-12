@@ -1417,8 +1417,7 @@ DataStore Parser::Name() {
 			ParsingError tempError("PARSE ERROR, MISSING ']' IN NAME", tempToken.lineNum, tempToken.t_string);
 			ResultOfParse.push_back(tempError);
 		}
-		tempToken = inputScanner.tokenScan();
-	}
+	}  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	return nameData;
 }
 

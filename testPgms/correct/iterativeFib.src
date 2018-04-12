@@ -26,10 +26,10 @@ end procedure;
 
 begin
 
-//getInteger(max);
+getInteger(max);
 for(i := 0; i < max)
 	Fib(i, x);
-	//putInteger(x);
+	putInteger(x);
 	i := i + 1;
 end for;
 

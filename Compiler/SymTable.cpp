@@ -201,6 +201,7 @@ Symbol* SymTable::addSymbol(string id, Symbol symbolIn, bool isGlobal) {
 			}
 		}
 		else {
+			symbolIn.isGlobal = true;
 			GlobalTable.insert({ id, symbolIn });
 
 			auto iter = GlobalTable.find(id);
