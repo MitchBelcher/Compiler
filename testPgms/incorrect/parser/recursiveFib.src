@@ -38,6 +38,6 @@ for(i := 0; i < max)
 	Fib(i, x);
 	putInteger(x);
 	i := i + 1;
-//end for; // Missing 'end for' line 41
+end for; // Missing 'end for' line 41
 
 end program.

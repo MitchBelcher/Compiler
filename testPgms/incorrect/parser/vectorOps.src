@@ -6,7 +6,7 @@ float vect1[-5:5];
 float vect2[-5:5];
 float vect3[-2:8];
 float vect4[0:10];
-float vect5[10];  // Missing upper (or lower) bound line 28
+//float vect5[10];  // Missing upper (or lower) bound line 28
 
 begin
 
@@ -38,7 +38,7 @@ putChar(' ');
 
 vect3 := vect1 + vect2 + 1.0;    // [ -3, -2, -1,  0,  1,  2,  3,  4,  5,  6]
 vect4 := vect1 * (vect2 + 1.0);  // [-10, -8, -6, -4, -2,  0,  2,  4,  6,  8]
-vect5 := vect4 / (vect2 - 3.0);  // [  5,  4,  3,  2,  1,  0, -1, -2, -3, -4]
+//vect5 := vect4 / (vect2 - 3.0);  // [  5,  4,  3,  2,  1,  0, -1, -2, -3, -4]
 
 putChar('c');
 for(indx := -2; indx < 8)

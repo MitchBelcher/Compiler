@@ -883,7 +883,7 @@ DataStore Parser::If() {
 						tempToken = inputScanner.tokenScan();
 					}
 					else {
-						ParsingError tempError("PARSE ERROR, MISSING ';' AFTER THEN IN STATEMENT", tempToken.lineNum - 1, tempToken.t_string);
+						ParsingError tempError("PARSE ERROR, MISSING ';' IN IF STATEMENT", tempToken.lineNum - 1, tempToken.t_string);
 						ResultOfParse.push_back(tempError);
 					}
 
