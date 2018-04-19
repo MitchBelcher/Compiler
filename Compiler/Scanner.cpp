@@ -397,6 +397,7 @@ token Scanner::tokenScan() {
 		// Found "/*", meaning begin of block comment
 		else if (nextChar == '*') {
 			tempToken.t_string += nextChar;
+			int blockCommentStart = currentLineNumber;
 			commentDepth++;					// We have begun a block comment, keep track of current depth to allow for nested block comments
 			nextChar = getc(tempStream);
 
@@ -428,6 +429,8 @@ token Scanner::tokenScan() {
 			// If we have somehow finished the while loop, but comment depth has some value, the token is invalid
 			if (commentDepth > 0) {
 				tempToken.t_type = INVALID;
+				ScannerError tempError("LEXER ERROR, UNEVEN BLOCK COMMENTS", blockCommentStart, "");
+				ResultOfScan.push_back(tempError);
 			}
 
 			// If we finish the loop, and comment depth is 0, we can move on

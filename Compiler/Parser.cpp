@@ -9,6 +9,8 @@ This cpp file contains the definition for Parser class functions, each going thr
 
 #include <iostream>
 
+bool invalidAssign = false;
+
 // Main parser constructor, which calls the constructor for the scanner instance
 Parser::Parser(const char* filePath, SymTable& returnedSymbolTable) {
 	inputScanner.init(filePath, returnedSymbolTable);
@@ -87,6 +89,7 @@ DataStore Parser::ProgramHead() {
 DataStore Parser::ProgramBody() {
 
 	DataStore programBodyData;
+	string lastToken;
 
 	// Declarations
 	while (tempToken.t_type == GLOBAL || tempToken.t_type == PROCEDURE || tempToken.t_type == INTEGER || tempToken.t_type == FLOAT || tempToken.t_type == BOOL || tempToken.t_type == STRING || tempToken.t_type == CHAR) {
@@ -111,13 +114,14 @@ DataStore Parser::ProgramBody() {
 
 	// Statements
 	while (tempToken.t_type == IDENTIFIER || tempToken.t_type == IF || tempToken.t_type == FOR || tempToken.t_type == RETURN) {
+		lastToken = tempToken.t_string;
 		Statement();
 
 		if (tempToken.t_type == SEMICOLON) {
 			tempToken = inputScanner.tokenScan();
 		}
 		else {
-			ParsingError tempError("PARSE ERROR, MISSING ';' IN STATEMENT", tempToken.lineNum, tempToken.t_string);
+			ParsingError tempError("PARSE ERROR, MISSING ';' IN STATEMENT", tempToken.lineNum - 1, lastToken);
 			ResultOfParse.push_back(tempError);
 		}
 	}
@@ -134,7 +138,7 @@ DataStore Parser::ProgramBody() {
 		}
 	}
 	else {
-		ParsingError tempError("PARSE ERROR, MISSING END IN END PROGRAM", tempToken.lineNum, tempToken.t_string);
+		ParsingError tempError("PARSE ERROR, MISSING END IN END PROGRAM", -1, tempToken.t_string);
 		ResultOfParse.push_back(tempError);
 	}
 	return programBodyData;
@@ -214,6 +218,8 @@ DataStore Parser::ProcDeclare(bool isGlobal) {
 DataStore Parser::VarDeclare(bool isGlobal) {
 	DataStore variableDeclarationData;
 	bool negBound = false;
+	bool missingLowBound = false;
+	bool missingUpBound = false;
 
 	Symbol tempSymbol;
 	tempSymbol.isGlobal = isGlobal;
@@ -239,9 +245,18 @@ DataStore Parser::VarDeclare(bool isGlobal) {
 			tempToken = inputScanner.tokenScan();
 			negBound = true;
 		}
-		dataToHandle = Number();	// Get the lower bound number value
+
+		if (tempToken.t_type == VALINT) {
+			dataToHandle = Number();	// Get the lower bound number value
+		}
+		else {
+			missingLowBound = true;
+			tempToken.t_string += tempToken.t_char;
+			ParsingError tempError("PARSE ERROR, MISSING LOWER ARRAY BOUND", tempToken.lineNum, tempToken.t_string);
+			ResultOfParse.push_back(tempError);
+		}
 		
-		if (dataToHandle.success) {
+		if (dataToHandle.success && !missingLowBound) {
 
 			// Check that lower bound is an integer value, if not, error
 			if (dataToHandle.tempToken.t_type != VALINT) {
@@ -273,9 +288,18 @@ DataStore Parser::VarDeclare(bool isGlobal) {
 				tempToken = inputScanner.tokenScan();
 				negBound = true;
 			}
-			dataToHandle = Number();	// Get the upper bound number value
 
-			if (dataToHandle.success) {
+			if (tempToken.t_type == VALINT) {
+				dataToHandle = Number();	// Get the upper bound number value
+			}
+			else {
+				missingUpBound = true;
+				tempToken.t_string += tempToken.t_char;
+				ParsingError tempError("PARSE ERROR, MISSING UPPER ARRAY BOUND", tempToken.lineNum, tempToken.t_string);
+				ResultOfParse.push_back(tempError);
+			}
+
+			if (dataToHandle.success && !missingUpBound) {
 
 				// Check that upper bound is an integer value, if not, error
 				if (dataToHandle.tempToken.t_type != VALINT) {
@@ -285,7 +309,7 @@ DataStore Parser::VarDeclare(bool isGlobal) {
 				else {
 
 					// Check that the upper bouond is larger than the lower bound, if not, error
-					if (!(tempSymbol.arrayLower < dataToHandle.tempToken.t_int)) {
+					if ((!(tempSymbol.arrayLower < dataToHandle.tempToken.t_int))) {
 						ParsingError tempError("PARSE ERROR, UPPER ARRAY BOUND MUST BE GREATER THAN LOWER", tempToken.lineNum, tempToken.t_string);
 						ResultOfParse.push_back(tempError);
 					}
@@ -717,6 +741,15 @@ DataStore Parser::Assign(bool onlyAssign) {
 			if (tempToken.t_type == SEMIEQUAL) {
 				AssignState(destData.tempToken, destData.tempType);	// Go into variable assignment function, passing the token and it's type in
 			}
+			else if (!invalidAssign && (tempToken.t_type == EQUALS || tempToken.t_type == COLON)) {
+				invalidAssign = true;
+				tempToken.t_type = SEMIEQUAL;
+
+				ParsingError tempError("PARSE WARNING, ':=' MUST BE USED FOR ASSIGNMENT, THIS IS ONLY FORGIVEN ONCE", tempToken.lineNum, tempToken.t_string);
+				ResultOfParse.push_back(tempError);
+
+				AssignState(destData.tempToken, destData.tempType);	// Go into variable assignment function, passing the token and it's type in
+			}
 			else {
 				ParsingError tempError("PARSE ERROR, MISSING ':=' IN ASSIGNMENT", tempToken.lineNum, tempToken.t_string);
 				ResultOfParse.push_back(tempError);
@@ -731,8 +764,19 @@ DataStore Parser::AssignState(token destTok, SYMBOL_TYPES destType) {
 
 	DataStore assignStateData;
 	DataStore dataToHandle;
+	string assignmentString;
+	assignmentString += destTok.t_string + " := ";
 
-	if (tempToken.t_type == SEMIEQUAL) {
+	if (tempToken.t_type == SEMIEQUAL || (!invalidAssign && (tempToken.t_type == EQUALS || tempToken.t_type == COLON))) {
+
+		if (tempToken.t_type != SEMIEQUAL) {
+			invalidAssign = true;
+			tempToken.t_type = SEMIEQUAL;
+
+			ParsingError tempError("PARSE WARNING, ':=' MUST BE USED FOR ASSIGNMENT, THIS IS ONLY FORGIVEN ONCE", tempToken.lineNum, tempToken.t_string);
+			ResultOfParse.push_back(tempError);
+		}
+
 		tempToken = inputScanner.tokenScan();
 		dataToHandle = Expr();	// Get the expression on the right of the ":=", and save that token and it's type
 		if (dataToHandle.success) {
@@ -762,7 +806,8 @@ DataStore Parser::AssignState(token destTok, SYMBOL_TYPES destType) {
 
 		// The types on either side of the assignment are invalid to be assigned to one another per language specification
 		else {
-			ParsingError tempError("PARSE ERROR, INCOMPATIBLE TYPES IN ASSIGNMENT", tempToken.lineNum, tempToken.t_string);
+			assignmentString += dataToHandle.tempToken.t_string;
+			ParsingError tempError("PARSE ERROR, INCOMPATIBLE TYPES IN ASSIGNMENT", tempToken.lineNum, assignmentString);
 			ResultOfParse.push_back(tempError);
 		}
 	}
@@ -838,7 +883,7 @@ DataStore Parser::If() {
 						tempToken = inputScanner.tokenScan();
 					}
 					else {
-						ParsingError tempError("PARSE ERROR, MISSING ';' AFTER THEN IN STATEMENT", tempToken.lineNum, tempToken.t_string);
+						ParsingError tempError("PARSE ERROR, MISSING ';' AFTER THEN IN STATEMENT", tempToken.lineNum - 1, tempToken.t_string);
 						ResultOfParse.push_back(tempError);
 					}
 
@@ -900,7 +945,7 @@ DataStore Parser::If() {
 					}
 				}
 				else {
-					ParsingError tempError("PARSE ERROR, MISSING THEN IN IF STATEMENT", tempToken.lineNum, tempToken.t_string);
+					ParsingError tempError("PARSE ERROR, MISSING THEN IN IF STATEMENT", tempToken.lineNum - 1, tempToken.t_string);
 					ResultOfParse.push_back(tempError);
 				}
 			}

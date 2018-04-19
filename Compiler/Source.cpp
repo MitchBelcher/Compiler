@@ -25,7 +25,7 @@ vector<SymbolError> ResultOfSymbol = {};
 int main(int argc, char *argv[]) {
 
 	//const char* filePath = "..//testPgms//correct//vectorOps.src"; // Filepath to read
-	const char* filePath = "..//testPgms//incorrect//lexer//invalidChars.src"; // Filepath to read
+	const char* filePath = "..//testPgms//incorrect//parser//logical.src"; // Filepath to read
 
 	SymTable symbolTable; // Create new blank symbol table
 
@@ -35,17 +35,17 @@ int main(int argc, char *argv[]) {
 	// Print out scanner errors
 	if (ResultOfScan.size() != 0) {
 		for (int i = 0; i < ResultOfScan.size(); i++) {
-			cout << "Line #: " << ResultOfScan[i].lineNumber << '\t' << "-- " << ResultOfScan[i].scanError << " --" << '\t' << "-- Error found at/near string: " << ResultOfScan[i].tokenName << endl;
+			cout << "Line #: " << ResultOfScan[i].lineNumber << '\t' << "-- " << ResultOfScan[i].scanError << " --" << '\t' << '\t' << "-- Error found at/near token: " << ResultOfScan[i].tokenName << endl;
 		}
 	}
 	else {
-		cout << "No scan errors found!" << endl;
+		cout << "No lexer errors found!" << endl;
 	}
 
 	// Print out parse errors
 	if (ResultOfParse.size() != 0) {
 		for (int i = 0; i < ResultOfParse.size(); i++) {
-			cout << "Line #: " << ResultOfParse[i].lineNumber << '\t' << "-- " << ResultOfParse[i].parseError << " --" << '\t' << "-- Error found at/near string: " << ResultOfParse[i].tokenName << endl;
+			cout << "Line #: " << ResultOfParse[i].lineNumber << '\t' << "-- " << ResultOfParse[i].parseError << " --" << '\t' << '\t' << "-- Error found at/near token: " << ResultOfParse[i].tokenName << endl;
 		}
 	}
 	else {
@@ -55,10 +55,10 @@ int main(int argc, char *argv[]) {
 	// Print out symbol errors
 	if (ResultOfSymbol.size() != 0) {
 		for (int i = 0; i < ResultOfSymbol.size(); i++) {
-			cout << ResultOfSymbol[i].symbolError << " --" << '\t' << "-- Error found at/near string: " << ResultOfSymbol[i].idString << endl;
+			cout << ResultOfSymbol[i].symbolError << " --" << '\t' << '\t' << "-- Error found at/near token: " << ResultOfSymbol[i].idString << endl;
 		}
 	}
 	else {
-		cout << "No parse errors found!" << endl;
+		cout << "No symbol table errors found!" << endl;
 	}
 }
