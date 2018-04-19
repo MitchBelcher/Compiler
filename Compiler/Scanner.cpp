@@ -91,11 +91,14 @@ token Scanner::tokenScan() {
 	// Characters
 	else if (currentChar == 39) {
 
+		string charString;
 		int nextChar;					// Create a placeholder for the next character
 		nextChar = getc(tempStream);	// Get the next character from the stream
+		tempToken.lineNum = currentLineNumber;
 
 		// If the next character is any of the allowed characters, add it to the tokens char value, and move to the next character
 		if (isalpha(nextChar) || isdigit(nextChar) || nextChar == '_' || nextChar == ';' || nextChar == ':' || nextChar == '.' || nextChar == '"' || nextChar == ' ') {
+			charString += nextChar;
 			tempToken.t_char = nextChar; // Set the tokens char to the character we found
 			nextChar = getc(tempStream); // Get the next character from the stream
 		}
@@ -103,13 +106,16 @@ token Scanner::tokenScan() {
 		// Ensure the next char is a ' to signal the end of the character definition
 		if (nextChar == 39) {
 			tempToken.t_type = VALCHAR;
-			tempToken.lineNum = currentLineNumber;
 		}
 
 		// The next char did not signal the end of the character definition, the token violates language rules
 		else {
 			tempToken.t_type = INVALID;
-			ScannerError tempError("ERROR, INVALID CHARACTER DEFINITION", tempToken.lineNum, tempToken.t_string);
+			while (nextChar != 39) {
+				charString += nextChar;
+				nextChar = getc(tempStream);
+			}
+			ScannerError tempError("LEXER ERROR, INVALID CHARACTER DEFINITION", tempToken.lineNum, charString);
 			ResultOfScan.push_back(tempError);
 		}
 	}
@@ -135,7 +141,7 @@ token Scanner::tokenScan() {
 		// The next char did not signal the end of the string definition, the token violates language rules
 		else {
 			tempToken.t_type = INVALID;
-			ScannerError tempError("ERROR, INVALID STRING DEFINITION", tempToken.lineNum, tempToken.t_string);
+			ScannerError tempError("LEXER ERROR, INVALID STRING DEFINITION", tempToken.lineNum, tempToken.t_string);
 			ResultOfScan.push_back(tempError);
 		}
 
@@ -339,7 +345,7 @@ token Scanner::tokenScan() {
 		// Since no '=' was found, set the type to invalid, as '!' is not a valid token or character, put the unneeded character back on the stream
 		else {
 			tempToken.t_type = INVALID;
-			ScannerError tempError("ERROR, INVALID USE OF '!'", tempToken.lineNum, tempToken.t_string);
+			ScannerError tempError("LEXER ERROR, INVALID USE OF '!'", tempToken.lineNum, tempToken.t_string);
 			ResultOfScan.push_back(tempError);
 			ungetc(nextChar, tempStream);
 		}
@@ -443,7 +449,7 @@ token Scanner::tokenScan() {
 		tempToken.t_type = INVALID;
 		tempToken.t_char = currentChar;
 		tempToken.lineNum = currentLineNumber;
-		ScannerError tempError("ERROR, INVALID TOKEN, NO APPROPRIATE MATCH IN SCAN", tempToken.lineNum, tempToken.t_string);
+		ScannerError tempError("LEXER ERROR, INVALID TOKEN, NO APPROPRIATE MATCH IN SCAN", tempToken.lineNum, tempToken.t_string);
 		ResultOfScan.push_back(tempError);
 	}
 
@@ -462,7 +468,7 @@ void Scanner::init(const char* filePath, SymTable& returnedSymbolTable) {
 
 	// Error in open
 	if (error != 0) {
-		ScannerError tempError("ERROR, INPUT FILE CANNOT BE READ", -1, "");
+		ScannerError tempError("LEXER ERROR, INPUT FILE CANNOT BE READ", -1, "");
 	}
 
 	symbolTable = &returnedSymbolTable;

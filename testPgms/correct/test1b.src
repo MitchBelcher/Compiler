@@ -25,4 +25,4 @@ PROGRAM grant IS
 	begin
 		if_proc();
 		for_proc();
-end program
+end program.

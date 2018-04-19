@@ -255,7 +255,7 @@ DataStore Parser::VarDeclare(bool isGlobal) {
 				if (negBound) {
 					variableDeclarationData.tempToken.t_int = dataToHandle.tempToken.t_int * -1;
 				}
-				tempSymbol.arrayLower = dataToHandle.tempToken.t_int;	// Set lower bound of symbol
+				tempSymbol.arrayLower = variableDeclarationData.tempToken.t_int;	// Set lower bound of symbol
 			}
 		}
 
@@ -295,7 +295,7 @@ DataStore Parser::VarDeclare(bool isGlobal) {
 						if (negBound) {
 							variableDeclarationData.tempToken.t_int = dataToHandle.tempToken.t_int * -1;
 						}
-						tempSymbol.arrayUpper = dataToHandle.tempToken.t_int;	// Set upper bound of symbol
+						tempSymbol.arrayUpper = variableDeclarationData.tempToken.t_int;	// Set upper bound of symbol
 					}
 				}
 			}
@@ -803,7 +803,9 @@ DataStore Parser::If() {
 
 		if (tempToken.t_type == PARENBEGIN) {
 			tempToken = inputScanner.tokenScan();
-			DataStore dataToHandle = Expr();	// Get the expression within the "if" conditional
+
+			DataStore
+				dataToHandle = Expr();	// Get the expression within the "if" conditional
 			if (dataToHandle.success) {
 				ifData.tempToken = dataToHandle.tempToken;
 				ifData.tempType = dataToHandle.tempType;
@@ -1050,6 +1052,9 @@ DataStore Parser::Expr() {
 		if (dataToHandle.success) {
 			expressionData = dataToHandle;
 		}
+		else {
+			expressionData.success = false;
+		}
 
 		// Type check
 		if (expressionData.tempType != SYMINTEGER || expressionData.tempType != SYMBOOL) {
@@ -1061,6 +1066,9 @@ DataStore Parser::Expr() {
 		dataToHandle = Arith();
 		if (dataToHandle.success) {
 			expressionData = dataToHandle;
+		}
+		else {
+			expressionData.success = false;
 		}
 		dataToHandle = ExprPrime(dataToHandle.tempToken, dataToHandle.tempType);
 		if (dataToHandle.success) {
@@ -1115,6 +1123,10 @@ DataStore Parser::Arith() {
 	DataStore dataToHandle = Relat();
 	if (dataToHandle.success) {
 		arithmeticData = dataToHandle;
+	}
+	else {
+		arithmeticData.success = false;
+		return arithmeticData;
 	}
 	dataToHandle = ArithPrime(dataToHandle.tempToken, dataToHandle.tempType);
 	if (dataToHandle.success) {
@@ -1178,6 +1190,10 @@ DataStore Parser::Relat() {
 	if (dataToHandle.success) {
 		relationData = dataToHandle;
 	}
+	else {
+		relationData.success = false;
+		return relationData;
+	}
 	dataToHandle = RelatPrime(dataToHandle.tempToken, dataToHandle.tempType);
 	if (dataToHandle.success) {
 		relationData.tempToken = dataToHandle.tempToken;
@@ -1193,27 +1209,27 @@ DataStore Parser::RelatPrime(token prevFacTok, SYMBOL_TYPES prevFacType) {
 
 	if (tempToken.t_type == LESS || tempToken.t_type == GREAT || tempToken.t_type == DOUBLEEQUAL || tempToken.t_type == NOTEQUAL || tempToken.t_type == LESSEQ || tempToken.t_type == GREATEQ) {
 		tempToken = inputScanner.tokenScan();
-		dataToHandle = Term();
-		if (dataToHandle.success) {
-			relationData = dataToHandle;
-		}
-		dataToHandle = RelatPrime(dataToHandle.tempToken, dataToHandle.tempType);
-		if (dataToHandle.success) {
-			relationData.tempToken = dataToHandle.tempToken;
-			relationData.tempType = dataToHandle.tempType;
-		}
-		return relationData;
 	}
 	else {
 		relationData.success = false;
 		return relationData;
 	}
 
+	dataToHandle = Term();
+	if (dataToHandle.success) {
+		relationData = dataToHandle;
+	}
+	dataToHandle = RelatPrime(dataToHandle.tempToken, dataToHandle.tempType);
+	if (dataToHandle.success) {
+		relationData.tempToken = dataToHandle.tempToken;
+		relationData.tempType = dataToHandle.tempType;
+	}
+
 	// Type check
-	if ((prevFacType == SYMBOOL && dataToHandle.tempType == SYMBOOL) || (prevFacType == SYMINTEGER && dataToHandle.tempType == SYMINTEGER) || (prevFacType == SYMFLOAT && dataToHandle.tempType == SYMFLOAT)) {
+	if ((prevFacType == SYMBOOL && relationData.tempType == SYMBOOL) || (prevFacType == SYMINTEGER && relationData.tempType == SYMINTEGER) || (prevFacType == SYMFLOAT && relationData.tempType == SYMFLOAT) || (prevFacType == SYMCHAR && relationData.tempType == SYMCHAR)) {
 
 	}
-	else if ((prevFacType == SYMBOOL && dataToHandle.tempType == SYMINTEGER) || (prevFacType == SYMINTEGER && dataToHandle.tempType == SYMBOOL)) {
+	else if ((prevFacType == SYMBOOL && relationData.tempType == SYMINTEGER) || (prevFacType == SYMINTEGER && relationData.tempType == SYMBOOL)) {
 		if (prevFacType == SYMBOOL) {
 
 		}
@@ -1221,7 +1237,7 @@ DataStore Parser::RelatPrime(token prevFacTok, SYMBOL_TYPES prevFacType) {
 
 		}
 	}
-	else if ((prevFacType == SYMINTEGER && dataToHandle.tempType == SYMFLOAT) || (prevFacType == SYMFLOAT && dataToHandle.tempType == SYMINTEGER)) {
+	else if ((prevFacType == SYMINTEGER && relationData.tempType == SYMFLOAT) || (prevFacType == SYMFLOAT && relationData.tempType == SYMINTEGER)) {
 		if (prevFacType == SYMINTEGER) {
 
 		}
@@ -1233,6 +1249,8 @@ DataStore Parser::RelatPrime(token prevFacTok, SYMBOL_TYPES prevFacType) {
 		ParsingError tempError("PARSE ERROR, MUST USE INT-INT, FLOAT-FLOAT, BOOL-BOOL, INT-BOOL, OR INT-FLOAT WITH RELATIONAL OPERATOR", tempToken.lineNum, tempToken.t_string);
 		ResultOfParse.push_back(tempError);
 	}
+
+	relationData.tempType = SYMBOOL;
 	return relationData;
 }
 
@@ -1242,6 +1260,10 @@ DataStore Parser::Term() {
 	DataStore dataToHandle = Factor();
 	if (dataToHandle.success) {
 		termData = dataToHandle;
+	}
+	else {
+		termData.success = false;
+		return termData;
 	}
 	dataToHandle = TermPrime(dataToHandle.tempToken, dataToHandle.tempType);
 	if (dataToHandle.success) {

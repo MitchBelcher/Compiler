@@ -5,6 +5,7 @@
 using namespace std;
 
 SymTable::SymTable() {
+	Scopes.reserve(100);
 	Symbol reserveSymbol;
 	reserveSymbol.isGlobal = true;
 
@@ -90,47 +91,84 @@ SymTable::SymTable() {
 
 
 
-
+	reserveSymbol.tempSymbolType = PROC;
+	reserveSymbol.tempTokenType = IDENTIFIER;
+	Symbol varAdd;
+	Symbol symbolAdd;
+	Symbol* retVarSymbol;
+	Symbol* retSymbol;
+	varAdd.id = "val";
+	varAdd.isGlobal = false;
 
 	reserveSymbol.id = "putinteger";
-	reserveSymbol.tempTokenType = PUTINTEGER;
-	addSymbol(reserveSymbol.id, reserveSymbol, true);
+	retSymbol = addSymbol(reserveSymbol.id, reserveSymbol, true);
+	OpenScope();
+	retVarSymbol = addSymbol(varAdd.id, varAdd, false);
+	retSymbol->procedureParameters.push_back(pair<Symbol*, PARAM_TYPES>(retVarSymbol, INTYPE));
+	CloseScope();
 
 	reserveSymbol.id = "putfloat";
-	reserveSymbol.tempTokenType = PUTFLOAT;
-	addSymbol(reserveSymbol.id, reserveSymbol, true);
+	retSymbol = addSymbol(reserveSymbol.id, reserveSymbol, true);
+	OpenScope();
+	retVarSymbol = addSymbol(varAdd.id, varAdd, false);
+	retSymbol->procedureParameters.push_back(pair<Symbol*, PARAM_TYPES>(retVarSymbol, INTYPE));
+	CloseScope();
 
 	reserveSymbol.id = "putchar";
-	reserveSymbol.tempTokenType = PUTCHAR;
-	addSymbol(reserveSymbol.id, reserveSymbol, true);
+	retSymbol = addSymbol(reserveSymbol.id, reserveSymbol, true);
+	OpenScope();
+	retVarSymbol = addSymbol(varAdd.id, varAdd, false);
+	retSymbol->procedureParameters.push_back(pair<Symbol*, PARAM_TYPES>(retVarSymbol, INTYPE));
+	CloseScope();
 
 	reserveSymbol.id = "putbool";
-	reserveSymbol.tempTokenType = PUTBOOL;
-	addSymbol(reserveSymbol.id, reserveSymbol, true);
+	retSymbol = addSymbol(reserveSymbol.id, reserveSymbol, true);
+	OpenScope();
+	retVarSymbol = addSymbol(varAdd.id, varAdd, false);
+	retSymbol->procedureParameters.push_back(pair<Symbol*, PARAM_TYPES>(retVarSymbol, INTYPE));
+	CloseScope();
 
 	reserveSymbol.id = "putstring";
-	reserveSymbol.tempTokenType = PUTSTRING;
-	addSymbol(reserveSymbol.id, reserveSymbol, true);
+	retSymbol = addSymbol(reserveSymbol.id, reserveSymbol, true);
+	OpenScope();
+	retVarSymbol = addSymbol(varAdd.id, varAdd, false);
+	retSymbol->procedureParameters.push_back(pair<Symbol*, PARAM_TYPES>(retVarSymbol, INTYPE));
+	CloseScope();
 
 	reserveSymbol.id = "getinteger";
-	reserveSymbol.tempTokenType = GETINTEGER;
-	addSymbol(reserveSymbol.id, reserveSymbol, true);
+	retSymbol = addSymbol(reserveSymbol.id, reserveSymbol, true);
+	OpenScope();
+	retVarSymbol = addSymbol(varAdd.id, varAdd, false);
+	retSymbol->procedureParameters.push_back(pair<Symbol*, PARAM_TYPES>(retVarSymbol, OUTTYPE));
+	CloseScope();
 
 	reserveSymbol.id = "getfloat";
-	reserveSymbol.tempTokenType = GETFLOAT;
-	addSymbol(reserveSymbol.id, reserveSymbol, true);
+	retSymbol = addSymbol(reserveSymbol.id, reserveSymbol, true);
+	OpenScope();
+	retVarSymbol = addSymbol(varAdd.id, varAdd, false);
+	retSymbol->procedureParameters.push_back(pair<Symbol*, PARAM_TYPES>(retVarSymbol, OUTTYPE));
+	CloseScope();
 
 	reserveSymbol.id = "getchar";
-	reserveSymbol.tempTokenType = GETCHAR;
-	addSymbol(reserveSymbol.id, reserveSymbol, true);
+	retSymbol = addSymbol(reserveSymbol.id, reserveSymbol, true);
+	OpenScope();
+	retVarSymbol = addSymbol(varAdd.id, varAdd, false);
+	retSymbol->procedureParameters.push_back(pair<Symbol*, PARAM_TYPES>(retVarSymbol, OUTTYPE));
+	CloseScope();
 
 	reserveSymbol.id = "getbool";
-	reserveSymbol.tempTokenType = GETBOOL;
-	addSymbol(reserveSymbol.id, reserveSymbol, true);
+	retSymbol = addSymbol(reserveSymbol.id, reserveSymbol, true);
+	OpenScope();
+	retVarSymbol = addSymbol(varAdd.id, varAdd, false);
+	retSymbol->procedureParameters.push_back(pair<Symbol*, PARAM_TYPES>(retVarSymbol, OUTTYPE));
+	CloseScope();
 
 	reserveSymbol.id = "getstring";
-	reserveSymbol.tempTokenType = GETSTRING;
-	addSymbol(reserveSymbol.id, reserveSymbol, true);
+	retSymbol = addSymbol(reserveSymbol.id, reserveSymbol, true);
+	OpenScope();
+	retVarSymbol = addSymbol(varAdd.id, varAdd, false);
+	retSymbol->procedureParameters.push_back(pair<Symbol*, PARAM_TYPES>(retVarSymbol, OUTTYPE));
+	CloseScope();
 
 
 
