@@ -24,7 +24,7 @@ struct DataStore {
 class Parser {
 public:
 	Parser(const char* filePath, SymTable& returnedSymbolTable);
-	void parseFile();
+	void beginParsingFile();
 
 	Scanner inputScanner;
 

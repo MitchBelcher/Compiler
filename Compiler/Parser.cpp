@@ -18,7 +18,7 @@ Parser::Parser(const char* filePath, SymTable& returnedSymbolTable) {
 }
 
 // Begin parsing the file by scanning the first token, and then running the program procedures
-void Parser::parseFile() {
+void Parser::beginParsingFile() {
 	tempToken = inputScanner.tokenScan();
 
 	// If the first thing we process is the end of the file, then there are issues with block comments.
@@ -69,10 +69,7 @@ DataStore Parser::ProgramHead() {
 
 	if (tempToken.t_type == PROGRAM) {
 		tempToken = inputScanner.tokenScan();
-		DataStore dataToHandle = Ident();		// Get the programs identifier
-		if (dataToHandle.success) {
-			programHeadData.tempToken = dataToHandle.tempToken;
-		}
+		programHeadData = Ident();		// Get the programs identifier
 
 		if (tempToken.t_type == IS) {
 			tempToken = inputScanner.tokenScan();
@@ -81,6 +78,10 @@ DataStore Parser::ProgramHead() {
 			ParsingError tempError("PARSE ERROR, MISSING 'IS' AT FILE BEGIN", tempToken.lineNum, tempToken.t_string);
 			ResultOfParse.push_back(tempError);
 		}
+	}
+	else {
+		ParsingError tempError("PARSE ERROR, MISSING 'PROGRAM' AT FILE BEGIN", tempToken.lineNum, tempToken.t_string);
+		ResultOfParse.push_back(tempError);
 	}
 	return programHeadData;
 }
@@ -92,6 +93,7 @@ DataStore Parser::ProgramBody() {
 	string lastToken;
 
 	// Declarations
+	// ALL DECLARATIONS OUTSIDE OF A PROCEDURE ARE ASSUMED TO BE GLOBAL
 	while (tempToken.t_type == GLOBAL || tempToken.t_type == PROCEDURE || tempToken.t_type == INTEGER || tempToken.t_type == FLOAT || tempToken.t_type == BOOL || tempToken.t_type == STRING || tempToken.t_type == CHAR) {
 		Declare(true);	// Declaring global identifier since outside of procedures
 
@@ -146,34 +148,31 @@ DataStore Parser::ProgramBody() {
 
 // Declare
 DataStore Parser::Declare(bool isOnlyGlobal) {
-
 	DataStore declarationData;
-	bool isGlobal = isOnlyGlobal;
 
 	// Global declarations
 	if (tempToken.t_type == GLOBAL) {
-		isGlobal = true;
 		tempToken = inputScanner.tokenScan();
 
 		// Procedure declaration
 		if (tempToken.t_type == PROCEDURE) {
-			ProcDeclare(isGlobal);
+			ProcDeclare(true);
 		}
 
 		// Variable declaration
 		else if (tempToken.t_type == INTEGER || tempToken.t_type == CHAR || tempToken.t_type == STRING || tempToken.t_type == FLOAT || tempToken.t_type == BOOL) {
-			VarDeclare(isGlobal);
+			VarDeclare(true);
 		}
 	}
 
 	// Local procedure declaration
 	else if (tempToken.t_type == PROCEDURE) {
-		ProcDeclare(isGlobal);
+		ProcDeclare(isOnlyGlobal);
 	}
 
 	// Local variable declaration
 	else if (tempToken.t_type == INTEGER || tempToken.t_type == CHAR || tempToken.t_type == STRING || tempToken.t_type == FLOAT || tempToken.t_type == BOOL) {
-		VarDeclare(isGlobal);
+		VarDeclare(isOnlyGlobal);
 	}
 	return declarationData;
 }
@@ -251,7 +250,7 @@ DataStore Parser::VarDeclare(bool isGlobal) {
 		}
 		else {
 			missingLowBound = true;
-			tempToken.t_string += tempToken.t_char;
+			tempToken.t_string = tempToken.t_char;
 			ParsingError tempError("PARSE ERROR, MISSING LOWER ARRAY BOUND", tempToken.lineNum, tempToken.t_string);
 			ResultOfParse.push_back(tempError);
 		}

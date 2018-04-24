@@ -245,6 +245,7 @@ token Scanner::tokenScan() {
 		}
 		else {
 			tempToken.t_type = COLON;		// Since no '=' was found, set type to colon
+			tempToken.t_char = ':';
 			ungetc(nextChar, tempStream);	// Put unneeded character back on the stream
 		}
 	}
@@ -472,6 +473,7 @@ void Scanner::init(const char* filePath, SymTable& returnedSymbolTable) {
 	// Error in open
 	if (error != 0) {
 		ScannerError tempError("LEXER ERROR, INPUT FILE CANNOT BE READ", -1, "");
+		ResultOfScan.push_back(tempError);
 	}
 
 	symbolTable = &returnedSymbolTable;

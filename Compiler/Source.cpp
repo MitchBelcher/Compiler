@@ -16,22 +16,45 @@ This cpp file contains the main entry point to the compiler program, setting the
 
 using namespace std;
 
+const char* filePath = "";
+
 // Reset all error vectors
 vector<ParsingError> ResultOfParse = {};
 vector<ScannerError> ResultOfScan = {};
 vector<SymbolError> ResultOfSymbol = {};
 
-// Main
-int main(int argc, char *argv[]) {
+vector<string> correctPrgms = { "iterativeFib", "logicals", "math", "multipleProcs", "resursiveFib", "source", "test_heap", "test_program_array", "test_program_minimal",  "test1", "test1b", "test2", "vectorOps" };
+vector<string> incorrectPrgms = { "invalidChars", "badSource", "iterativeFib", "logical", "recursiveFib", "vectorOps", "assignBoolAndChar", "assignFloatToInt", "test1",  "test2", "test3" };
 
-	//const char* filePath = "..//testPgms//correct//vectorOps.src"; // Filepath to read
-	const char* filePath = "..//testPgms//incorrect//parser//vectorOps.src"; // Filepath to read
+string relCorrectPath = "..//testPgms//correct//";
+string relIncorrectPath = "..//testPgms//incorrect//";
 
-	SymTable symbolTable; // Create new blank symbol table
+void mainMenu() {
+	cout << "Please select your option: " << endl;
+	cout << "1: Correct Programs" << endl;
+	cout << "2: Incorrect Programs" << endl;
+	cout << "3: EXIT" << endl << endl;
+}
 
-	Parser fileParse(filePath, symbolTable);	// Create parser with set filepath and new blank symbol table
-	fileParse.parseFile();						// Parse the input file
+void makeCorrectMenu() {
+	cout << "Please select the program you wish to run: " << endl;
+	for (int i = 0; i < correctPrgms.size(); i++) {
+		cout << i << ": " << correctPrgms[i] << endl;
+	}
 
+	cout << correctPrgms.size() << ": " << "Return to main menu" << endl << endl;
+}
+
+void makeIncorrectMenu() {
+	cout << "Please select the program you wish to run: " << endl;
+	for (int i = 0; i < incorrectPrgms.size(); i++) {
+		cout << i << ": " << incorrectPrgms[i] << endl;
+	}
+
+	cout << incorrectPrgms.size() << ": " << "Return to main menu" << endl << endl;
+}
+
+void checkErrors() {
 	// Print out scanner errors
 	if (ResultOfScan.size() != 0) {
 		for (int i = 0; i < ResultOfScan.size(); i++) {
@@ -59,6 +82,172 @@ int main(int argc, char *argv[]) {
 		}
 	}
 	else {
-		cout << "No symbol table errors found!" << endl;
+		cout << "No symbol table errors found!" << endl << endl;
 	}
+}
+
+void doStuff() {
+	SymTable symbolTable; // Create new blank symbol table
+
+	Parser fileParse(filePath, symbolTable);	// Create parser with set filepath and new blank symbol table
+	fileParse.beginParsingFile();				// Parse the input file
+
+	checkErrors();
+}
+
+string setFilePath(bool correct, string fileToUse) {
+	string workingString = "";
+
+	if (correct) {
+		workingString = relCorrectPath + fileToUse + ".src";
+	}
+	else {
+		workingString = relIncorrectPath + fileToUse + ".src";
+	}
+
+	return workingString;
+}
+
+// Main
+int main(int argc, char *argv[]) {
+
+	int mainMenuSelection;
+	int correctMenuSelection;
+	int incorrectMenuSelection;
+	bool exit = false;
+	bool goBack = false;
+	string tempPath = "";
+
+	string selectedFile = "";
+
+	while (!exit) {
+		mainMenu();
+		cin >> mainMenuSelection;
+
+		while (!goBack) {
+			switch (mainMenuSelection) {
+				case 1:
+					makeCorrectMenu();
+					cin >> correctMenuSelection;
+
+					switch (correctMenuSelection) {
+						case 0:
+							tempPath = setFilePath(true, correctPrgms[0]);
+							filePath = tempPath.c_str();
+							cout << "RUNNING: " << filePath << endl;
+							doStuff();
+							break;
+
+						case 1:
+							tempPath = setFilePath(true, correctPrgms[1]);
+							filePath = tempPath.c_str();
+							cout << "RUNNING: " << filePath << endl;
+							doStuff();
+							break;
+
+						case 2:
+							tempPath = setFilePath(true, correctPrgms[2]);
+							filePath = tempPath.c_str();
+							cout << "RUNNING: " << filePath << endl;
+							doStuff();
+							break;
+
+						case 3:
+							tempPath = setFilePath(true, correctPrgms[3]);
+							filePath = tempPath.c_str();
+							cout << "RUNNING: " << filePath << endl;
+							doStuff();
+							break;
+
+						case 4:
+							tempPath = setFilePath(true, correctPrgms[4]);
+							filePath = tempPath.c_str();
+							cout << "RUNNING: " << filePath << endl;
+							doStuff();
+							break;
+
+						case 5:
+							tempPath = setFilePath(true, correctPrgms[5]);
+							filePath = tempPath.c_str();
+							cout << "RUNNING: " << filePath << endl;
+							doStuff();
+							break;
+
+						case 6:
+							tempPath = setFilePath(true, correctPrgms[6]);
+							filePath = tempPath.c_str();
+							cout << "RUNNING: " << filePath << endl;
+							doStuff();
+							break;
+
+						case 7:
+							tempPath = setFilePath(true, correctPrgms[7]);
+							filePath = tempPath.c_str();
+							cout << "RUNNING: " << filePath << endl;
+							doStuff();
+							break;
+
+						case 8:
+							tempPath = setFilePath(true, correctPrgms[8]);
+							filePath = tempPath.c_str();
+							cout << "RUNNING: " << filePath << endl;
+							doStuff();
+							break;
+
+						case 9:
+							tempPath = setFilePath(true, correctPrgms[9]);
+							filePath = tempPath.c_str();
+							cout << "RUNNING: " << filePath << endl;
+							doStuff();
+							break;
+
+						case 10:
+							tempPath = setFilePath(true, correctPrgms[10]);
+							filePath = tempPath.c_str();
+							cout << "RUNNING: " << filePath << endl;
+							doStuff();
+							break;
+
+						case 11:
+							tempPath = setFilePath(true, correctPrgms[11]);
+							filePath = tempPath.c_str();
+							cout << "RUNNING: " << filePath << endl;
+							doStuff();
+							break;
+
+						case 12:
+							tempPath = setFilePath(true, correctPrgms[12]);
+							filePath = tempPath.c_str();
+							cout << "RUNNING: " << filePath << endl;
+							doStuff();
+							break;
+
+						case 13:
+							goBack = true;
+							break;
+					}
+					break;
+
+				case 2:
+					makeIncorrectMenu();
+					cin >> incorrectMenuSelection;
+
+					switch (incorrectMenuSelection) {
+
+					}
+					break;
+
+				case 3:
+					exit = true;
+					break;
+
+				default:
+					cout << "Bad input, try again" << endl << endl;
+					break;
+				}
+		}
+
+	}
+
+	//const char* filePath = "..//testPgms//correct//iterativeFib.src"; // Filepath to read
 }

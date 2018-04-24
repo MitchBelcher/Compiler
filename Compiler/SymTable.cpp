@@ -5,7 +5,13 @@
 using namespace std;
 
 SymTable::SymTable() {
+
+
+
 	Scopes.reserve(100);
+
+
+
 	Symbol reserveSymbol;
 	reserveSymbol.isGlobal = true;
 
@@ -91,6 +97,7 @@ SymTable::SymTable() {
 
 
 
+
 	reserveSymbol.tempSymbolType = PROC;
 	reserveSymbol.tempTokenType = IDENTIFIER;
 	Symbol varAdd;
@@ -98,11 +105,13 @@ SymTable::SymTable() {
 	Symbol* retVarSymbol;
 	Symbol* retSymbol;
 	varAdd.id = "val";
+	varAdd.tempTokenType = IDENTIFIER;
 	varAdd.isGlobal = false;
 
 	reserveSymbol.id = "putinteger";
 	retSymbol = addSymbol(reserveSymbol.id, reserveSymbol, true);
 	OpenScope();
+	varAdd.tempSymbolType = SYMINTEGER;
 	retVarSymbol = addSymbol(varAdd.id, varAdd, false);
 	retSymbol->procedureParameters.push_back(pair<Symbol*, PARAM_TYPES>(retVarSymbol, INTYPE));
 	CloseScope();
@@ -110,6 +119,7 @@ SymTable::SymTable() {
 	reserveSymbol.id = "putfloat";
 	retSymbol = addSymbol(reserveSymbol.id, reserveSymbol, true);
 	OpenScope();
+	varAdd.tempSymbolType = SYMFLOAT;
 	retVarSymbol = addSymbol(varAdd.id, varAdd, false);
 	retSymbol->procedureParameters.push_back(pair<Symbol*, PARAM_TYPES>(retVarSymbol, INTYPE));
 	CloseScope();
@@ -117,6 +127,7 @@ SymTable::SymTable() {
 	reserveSymbol.id = "putchar";
 	retSymbol = addSymbol(reserveSymbol.id, reserveSymbol, true);
 	OpenScope();
+	varAdd.tempSymbolType = SYMCHAR;
 	retVarSymbol = addSymbol(varAdd.id, varAdd, false);
 	retSymbol->procedureParameters.push_back(pair<Symbol*, PARAM_TYPES>(retVarSymbol, INTYPE));
 	CloseScope();
@@ -124,6 +135,7 @@ SymTable::SymTable() {
 	reserveSymbol.id = "putbool";
 	retSymbol = addSymbol(reserveSymbol.id, reserveSymbol, true);
 	OpenScope();
+	varAdd.tempSymbolType = SYMBOOL;
 	retVarSymbol = addSymbol(varAdd.id, varAdd, false);
 	retSymbol->procedureParameters.push_back(pair<Symbol*, PARAM_TYPES>(retVarSymbol, INTYPE));
 	CloseScope();
@@ -131,6 +143,7 @@ SymTable::SymTable() {
 	reserveSymbol.id = "putstring";
 	retSymbol = addSymbol(reserveSymbol.id, reserveSymbol, true);
 	OpenScope();
+	varAdd.tempSymbolType = SYMSTRING;
 	retVarSymbol = addSymbol(varAdd.id, varAdd, false);
 	retSymbol->procedureParameters.push_back(pair<Symbol*, PARAM_TYPES>(retVarSymbol, INTYPE));
 	CloseScope();
@@ -138,6 +151,7 @@ SymTable::SymTable() {
 	reserveSymbol.id = "getinteger";
 	retSymbol = addSymbol(reserveSymbol.id, reserveSymbol, true);
 	OpenScope();
+	varAdd.tempSymbolType = SYMINTEGER;
 	retVarSymbol = addSymbol(varAdd.id, varAdd, false);
 	retSymbol->procedureParameters.push_back(pair<Symbol*, PARAM_TYPES>(retVarSymbol, OUTTYPE));
 	CloseScope();
@@ -145,6 +159,7 @@ SymTable::SymTable() {
 	reserveSymbol.id = "getfloat";
 	retSymbol = addSymbol(reserveSymbol.id, reserveSymbol, true);
 	OpenScope();
+	varAdd.tempSymbolType = SYMFLOAT;
 	retVarSymbol = addSymbol(varAdd.id, varAdd, false);
 	retSymbol->procedureParameters.push_back(pair<Symbol*, PARAM_TYPES>(retVarSymbol, OUTTYPE));
 	CloseScope();
@@ -152,6 +167,7 @@ SymTable::SymTable() {
 	reserveSymbol.id = "getchar";
 	retSymbol = addSymbol(reserveSymbol.id, reserveSymbol, true);
 	OpenScope();
+	varAdd.tempSymbolType = SYMCHAR;
 	retVarSymbol = addSymbol(varAdd.id, varAdd, false);
 	retSymbol->procedureParameters.push_back(pair<Symbol*, PARAM_TYPES>(retVarSymbol, OUTTYPE));
 	CloseScope();
@@ -159,6 +175,7 @@ SymTable::SymTable() {
 	reserveSymbol.id = "getbool";
 	retSymbol = addSymbol(reserveSymbol.id, reserveSymbol, true);
 	OpenScope();
+	varAdd.tempSymbolType = SYMBOOL;
 	retVarSymbol = addSymbol(varAdd.id, varAdd, false);
 	retSymbol->procedureParameters.push_back(pair<Symbol*, PARAM_TYPES>(retVarSymbol, OUTTYPE));
 	CloseScope();
@@ -166,6 +183,7 @@ SymTable::SymTable() {
 	reserveSymbol.id = "getstring";
 	retSymbol = addSymbol(reserveSymbol.id, reserveSymbol, true);
 	OpenScope();
+	varAdd.tempSymbolType = SYMSTRING;
 	retVarSymbol = addSymbol(varAdd.id, varAdd, false);
 	retSymbol->procedureParameters.push_back(pair<Symbol*, PARAM_TYPES>(retVarSymbol, OUTTYPE));
 	CloseScope();
