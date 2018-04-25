@@ -117,7 +117,7 @@ DataStore Parser::ProgramBody() {
 	// Statements
 	while (tempToken.t_type == IDENTIFIER || tempToken.t_type == IF || tempToken.t_type == FOR || tempToken.t_type == RETURN) {
 		lastToken = tempToken.t_string;
-		Statement();
+		Statement(true);
 
 		if (tempToken.t_type == SEMICOLON) {
 			tempToken = inputScanner.tokenScan();
@@ -178,12 +178,19 @@ DataStore Parser::Declare(bool isOnlyGlobal) {
 }
 
 // Statement
-DataStore Parser::Statement() {
+DataStore Parser::Statement(bool acceptParen) {
 
 	DataStore statementData;
 
 	if (tempToken.t_type == IDENTIFIER) {
-		StatementAssign();
+
+		// If we aren't dealing with a situation where there could be parentheses (procs, if, loop, etc...), choose which assignment function to use
+		if (!acceptParen) {
+			Assign();
+		}
+		else {
+			ParenAssign();
+		}
 	}
 
 	else if (tempToken.t_type == IF) {
@@ -518,7 +525,7 @@ DataStore Parser::ProcBody() {
 
 	// Statements
 	while (tempToken.t_type == IDENTIFIER || tempToken.t_type == IF || tempToken.t_type == FOR || tempToken.t_type == RETURN) {
-		Statement();
+		Statement(true);
 
 		if (tempToken.t_type == SEMICOLON) {
 			tempToken = inputScanner.tokenScan();
@@ -647,7 +654,8 @@ DataStore Parser::TypeMark() {
 	return typeData;
 }
 
-DataStore Parser::StatementAssign() {
+// Assignment that handles parentheses
+DataStore Parser::ParenAssign() {
 
 	DataStore assignData;
 	DataStore destData;
@@ -660,7 +668,32 @@ DataStore Parser::StatementAssign() {
 			destData = dataToHandle;
 		}
 
-		if (tempToken.t_type == PARENBEGIN) {
+		// Check for '[', meaning we are assigning an array value
+		if (tempToken.t_type == BRACKBEGIN) {
+			tempToken = inputScanner.tokenScan();
+			dataToHandle = Expr();	// Get the expression from inside the brackets
+			if (dataToHandle.success) {
+				destData = dataToHandle;
+			}
+
+			// Check that array index is an integer, if not, error
+			if (destData.tempType != SYMINTEGER) {
+				ParsingError tempError("PARSE ERROR, ARRAY ACESSORS MUST BE INTEGER VALUES", tempToken.lineNum, tempToken.t_string);
+				ResultOfParse.push_back(tempError);
+			}
+
+			if (tempToken.t_type == BRACKEND) {
+				tempToken = inputScanner.tokenScan();
+				AssignState(destData.tempToken, destData.tempType);
+			}
+			else {
+				ParsingError tempError("PARSE ERROR, MISSING ']' IN ASSIGNMENT", tempToken.lineNum, tempToken.t_string);
+				ResultOfParse.push_back(tempError);
+			}
+		}
+
+		// Check for a parentheses, something like a procedure, if, or loop statement may be being called
+		else if (tempToken.t_type == PARENBEGIN) {
 			tempToken = inputScanner.tokenScan();
 
 			destData = ArgumentList();	// Get the list of arguments for the procedure call
@@ -708,12 +741,31 @@ DataStore Parser::StatementAssign() {
 				ResultOfParse.push_back(tempError);
 			}
 		}
+
+		// We are assigning a simple variable
+		else {
+			if (tempToken.t_type == SEMIEQUAL) {
+				AssignState(destData.tempToken, destData.tempType);	// Go into variable assignment function, passing the token and it's type in
+			}
+			else if (!invalidAssign && (tempToken.t_type == EQUALS || tempToken.t_type == COLON)) {
+				invalidAssign = true;
+				tempToken.t_type = SEMIEQUAL;
+
+				ParsingError tempError("PARSE WARNING, ':=' MUST BE USED FOR ASSIGNMENT, THIS IS ONLY FORGIVEN ONCE", tempToken.lineNum, tempToken.t_string);
+				ResultOfParse.push_back(tempError);
+
+				AssignState(destData.tempToken, destData.tempType);	// Go into variable assignment function, passing the token and it's type in
+			}
+			else {
+				ParsingError tempError("PARSE ERROR, MISSING ':=' IN ASSIGNMENT", tempToken.lineNum, tempToken.t_string);
+				ResultOfParse.push_back(tempError);
+			}
+		}
 	}
 	return assignData;
 }
 
-
-// Assign
+// Basic Assign (same as ParenAssign but doesn't look for parentheses)
 DataStore Parser::Assign() {
 
 	DataStore assignData;
@@ -750,9 +802,6 @@ DataStore Parser::Assign() {
 				ResultOfParse.push_back(tempError);
 			}
 		}
-
-		// Check for '(', meaning we are calling a procedure
-		
 
 		// We are assigning a simple variable
 		else {
@@ -895,7 +944,7 @@ DataStore Parser::If() {
 
 				if (tempToken.t_type == THEN) {
 					tempToken = inputScanner.tokenScan();
-					Statement();	// Get the first statement within the if section
+					Statement(true);	// Get the first statement within the if section
 
 					if (tempToken.t_type == SEMICOLON) {
 						tempToken = inputScanner.tokenScan();
@@ -907,7 +956,7 @@ DataStore Parser::If() {
 
 					// So long as there are more identifiers found, nested if conditions found, for loops found, or a return statement found, keep getting those statements
 					while (tempToken.t_type == IDENTIFIER || tempToken.t_type == IF || tempToken.t_type == FOR || tempToken.t_type == RETURN) {
-						Statement();
+						Statement(true);
 
 						if (tempToken.t_type == SEMICOLON) {
 							tempToken = inputScanner.tokenScan();
@@ -921,7 +970,7 @@ DataStore Parser::If() {
 					// Check for else condition
 					if (tempToken.t_type == ELSE) {
 						tempToken = inputScanner.tokenScan();
-						Statement();	// Get the first statement within the else condition
+						Statement(true);	// Get the first statement within the else condition
 
 						if (tempToken.t_type == SEMICOLON) {
 							tempToken = inputScanner.tokenScan();
@@ -933,7 +982,7 @@ DataStore Parser::If() {
 
 						// So long as there are more identifiers found, nested if conditions found, for loops found, or a return statement found, keep getting those statements
 						while (tempToken.t_type == IDENTIFIER || tempToken.t_type == IF || tempToken.t_type == FOR || tempToken.t_type == RETURN) {
-							Statement();
+							Statement(false);
 
 							if (tempToken.t_type == SEMICOLON) {
 								tempToken = inputScanner.tokenScan();
@@ -1023,7 +1072,7 @@ DataStore Parser::Loop() {
 				tempToken = inputScanner.tokenScan();
 
 				while (tempToken.t_type == IDENTIFIER || tempToken.t_type == IF || tempToken.t_type == FOR || tempToken.t_type == RETURN) {
-					Statement();
+					Statement(true);
 
 					if (tempToken.t_type == SEMICOLON) {
 						tempToken = inputScanner.tokenScan();

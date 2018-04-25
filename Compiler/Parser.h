@@ -37,7 +37,7 @@ private:
 	DataStore ProgramHead();
 	DataStore ProgramBody();
 	DataStore Declare(bool isOnlyGlobal);
-	DataStore Statement();
+	DataStore Statement(bool acceptParen);
 	DataStore ProcDeclare(bool isGlobal);
 	DataStore VarDeclare(bool isGlobal);
 	DataStore ProcHead(bool isGlobal);
@@ -46,7 +46,7 @@ private:
 	DataStore Param();
 	DataStore TypeMark();
 	DataStore Assign();
-	DataStore StatementAssign();
+	DataStore ParenAssign();
 	DataStore If();
 	DataStore Loop();
 	DataStore Return();
