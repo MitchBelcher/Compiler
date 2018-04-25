@@ -46,7 +46,7 @@ private:
 	DataStore Param();
 	DataStore TypeMark();
 	DataStore Assign();
-	DataStore ForAssign();
+	DataStore StatementAssign();
 	DataStore If();
 	DataStore Loop();
 	DataStore Return();

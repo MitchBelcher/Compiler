@@ -183,7 +183,7 @@ DataStore Parser::Statement() {
 	DataStore statementData;
 
 	if (tempToken.t_type == IDENTIFIER) {
-		Assign();
+		StatementAssign();
 	}
 
 	else if (tempToken.t_type == IF) {
@@ -647,7 +647,7 @@ DataStore Parser::TypeMark() {
 	return typeData;
 }
 
-DataStore Parser::ForAssign() {
+DataStore Parser::StatementAssign() {
 
 	DataStore assignData;
 	DataStore destData;
@@ -994,7 +994,7 @@ DataStore Parser::Loop() {
 
 		if (tempToken.t_type == PARENBEGIN) {
 			tempToken = inputScanner.tokenScan();
-			ForAssign();
+			Assign();
 
 			if (tempToken.t_type == SEMICOLON) {
 				tempToken = inputScanner.tokenScan();
