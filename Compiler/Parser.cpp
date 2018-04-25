@@ -183,7 +183,7 @@ DataStore Parser::Statement() {
 	DataStore statementData;
 
 	if (tempToken.t_type == IDENTIFIER) {
-		Assign(false);
+		Assign();
 	}
 
 	else if (tempToken.t_type == IF) {
@@ -647,8 +647,7 @@ DataStore Parser::TypeMark() {
 	return typeData;
 }
 
-// Assign
-DataStore Parser::Assign(bool onlyAssign) {
+DataStore Parser::ForAssign() {
 
 	DataStore assignData;
 	DataStore destData;
@@ -661,32 +660,7 @@ DataStore Parser::Assign(bool onlyAssign) {
 			destData = dataToHandle;
 		}
 
-		// Check for '[', meaning we are assigning an array value
-		if (tempToken.t_type == BRACKBEGIN) {
-			tempToken = inputScanner.tokenScan();
-			dataToHandle = Expr();	// Get the expression from inside the brackets
-			if (dataToHandle.success) {
-				destData = dataToHandle;
-			}
-
-			// Check that array index is an integer, if not, error
-			if (destData.tempType != SYMINTEGER) {
-				ParsingError tempError("PARSE ERROR, ARRAY ACESSORS MUST BE INTEGER VALUES", tempToken.lineNum, tempToken.t_string);
-				ResultOfParse.push_back(tempError);
-			}
-
-			if (tempToken.t_type == BRACKEND) {
-				tempToken = inputScanner.tokenScan();
-				AssignState(destData.tempToken, destData.tempType);
-			}
-			else {
-				ParsingError tempError("PARSE ERROR, MISSING ']' IN ASSIGNMENT", tempToken.lineNum, tempToken.t_string);
-				ResultOfParse.push_back(tempError);
-			}
-		}
-
-		// Check for '(', meaning we are calling a procedure
-		else if (tempToken.t_type == PARENBEGIN && onlyAssign == false) {
+		if (tempToken.t_type == PARENBEGIN) {
 			tempToken = inputScanner.tokenScan();
 
 			destData = ArgumentList();	// Get the list of arguments for the procedure call
@@ -734,6 +708,51 @@ DataStore Parser::Assign(bool onlyAssign) {
 				ResultOfParse.push_back(tempError);
 			}
 		}
+	}
+	return assignData;
+}
+
+
+// Assign
+DataStore Parser::Assign() {
+
+	DataStore assignData;
+	DataStore destData;
+
+	if (tempToken.t_type == IDENTIFIER) {
+		DataStore dataToHandle = Ident();	//	Get the identifier
+		if (dataToHandle.success) {
+			assignData.tempToken = dataToHandle.tempToken;
+			assignData.tempType = dataToHandle.tempType;
+			destData = dataToHandle;
+		}
+
+		// Check for '[', meaning we are assigning an array value
+		if (tempToken.t_type == BRACKBEGIN) {
+			tempToken = inputScanner.tokenScan();
+			dataToHandle = Expr();	// Get the expression from inside the brackets
+			if (dataToHandle.success) {
+				destData = dataToHandle;
+			}
+
+			// Check that array index is an integer, if not, error
+			if (destData.tempType != SYMINTEGER) {
+				ParsingError tempError("PARSE ERROR, ARRAY ACESSORS MUST BE INTEGER VALUES", tempToken.lineNum, tempToken.t_string);
+				ResultOfParse.push_back(tempError);
+			}
+
+			if (tempToken.t_type == BRACKEND) {
+				tempToken = inputScanner.tokenScan();
+				AssignState(destData.tempToken, destData.tempType);
+			}
+			else {
+				ParsingError tempError("PARSE ERROR, MISSING ']' IN ASSIGNMENT", tempToken.lineNum, tempToken.t_string);
+				ResultOfParse.push_back(tempError);
+			}
+		}
+
+		// Check for '(', meaning we are calling a procedure
+		
 
 		// We are assigning a simple variable
 		else {
@@ -975,7 +994,7 @@ DataStore Parser::Loop() {
 
 		if (tempToken.t_type == PARENBEGIN) {
 			tempToken = inputScanner.tokenScan();
-			Assign(true);
+			ForAssign();
 
 			if (tempToken.t_type == SEMICOLON) {
 				tempToken = inputScanner.tokenScan();
