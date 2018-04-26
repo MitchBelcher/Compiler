@@ -7,13 +7,13 @@ begin
 
 getBool(x);
 if(x) then
-	putChar('~'); // Invalid character
+	putChar('~'); 			// Invalid character
 else
-	putChar('Ffffsdd');  // Invalid definition of character
+	putChar('Ffffsdd');  	// Invalid definition of character
 end if;
 
 getChar(c);
-if(c == 'A');
+if(c == 'A') then
 	putChar('T');
 else
 	putChar('F');

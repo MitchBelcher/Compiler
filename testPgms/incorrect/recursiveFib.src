@@ -23,10 +23,10 @@ procedure Fib(integer val in, integer ret out)
 		return;
 	end if;
 	Sub(1, val);
-	Fib(val, tmp[0]); // 'tmp' not in scope line 26
+	Fib(val, tmp[0]); 										// 'tmp' not in scope line 26
 	Sub(1, val);
-	Fib(val, tmp[1]); // 'tmp' not in scope line 28
-	ret := tmp[0] + tmp[1]; // 'tmp' not in scope line 29
+	Fib(val, tmp[1]); 										// 'tmp' not in scope line 28
+	ret := tmp[0] + tmp[1]; 								// 'tmp' not in scope line 29
 	return;
 end procedure;
 
@@ -38,6 +38,6 @@ for(i := 0; i < max)
 	Fib(i, x);
 	putInteger(x);
 	i := i + 1;
-end for; // Missing 'end for' line 41
+//end for; 													// Missing 'end for' line 41
 
 end program.

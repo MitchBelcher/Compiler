@@ -9,8 +9,6 @@ This cpp file contains the definition for Parser class functions, each going thr
 
 #include <iostream>
 
-bool invalidAssign = false;
-
 // Main parser constructor, which calls the constructor for the scanner instance
 Parser::Parser(const char* filePath, SymTable& returnedSymbolTable) {
 	inputScanner.init(filePath, returnedSymbolTable);
@@ -37,7 +35,16 @@ void Parser::beginParsingFile() {
 	Program();
 }
 
-// Program
+
+/*
+	PROGRAM
+
+This function handles the main entry point for the input file
+It checks that the first token of the input file is "program" per the language specification
+It will then either error, or will call the function for the Program Header and then Program Body
+If it doesn't error, it also checks after calling the Program Body function that we didn't receive the end of the file back
+
+*/
 DataStore Parser::Program() {
 
 	DataStore programData;
@@ -62,7 +69,16 @@ DataStore Parser::Program() {
 	return programData;
 }
 
-// Program Head
+
+/*
+	PROGRAM HEADER
+
+This function handles the header for every input file program
+It double checks that the Program function found "program", then scans the next token
+The next token should be the identifier for the program itself, so we store that
+Then it checks for "is" per the language specification, if it doesn't find either "is" or "program" it errors
+
+*/
 DataStore Parser::ProgramHead() {
 
 	DataStore programHeadData;
@@ -86,7 +102,21 @@ DataStore Parser::ProgramHead() {
 	return programHeadData;
 }
 
-// Program Body
+
+/*
+	PROGRAM BODY
+
+This function handles the body for every input file program
+It first checks for appropriate declaration statements, like "global", "procedure", or one of the types allowed in the language
+Then it calls the Declaration function to process that declaration, and upon returning, checks that the declaration ended in a ';' per the language specification
+This continues until it finds no more appropriate declarations
+Then it searches for the begin statement, and errors if it is not found
+Next it checks for apropriate statements within the program body, like "if", "for", or an identifier, etc...
+Then it will call the Statement function to process that statement, and upon returning, checks that the statement ended in a ';' per the language specification
+This continues until it finds no more appropriate statements
+Now it checks for "end program", per the language specification, and will error if either are not found
+
+*/
 DataStore Parser::ProgramBody() {
 
 	DataStore programBodyData;
@@ -146,7 +176,16 @@ DataStore Parser::ProgramBody() {
 	return programBodyData;
 }
 
-// Declare
+
+/*
+	DECLARATIONS
+
+This function handles all declarations in the input file program
+First it checks to see if the declaration has been listed as global.  If it has, we call the appropriate function for declaring procedures or variables, respectively
+If it was not declared as global, we will call the appropriate function for declarations, but not specifying that the procedure or variable should explicitly be global
+One unique part of the implementation for this compiler as a whole, is that if something is declared outside of a procedure, but inside of a program, it is automatically made global indiscriminantly
+
+*/
 DataStore Parser::Declare(bool isOnlyGlobal) {
 	DataStore declarationData;
 
@@ -177,7 +216,17 @@ DataStore Parser::Declare(bool isOnlyGlobal) {
 	return declarationData;
 }
 
-// Statement
+
+/*
+	STATEMENTS
+
+This function handles all statements in the input file program
+We take in a boolean value that tells us whether or not we are likely to have a parentheses involved in the assignment (for something like a procedure or if statement)
+This is so that if we see an identifier, we can call the appropriate assignment function, one that will deal with parentheses and one that will just deal with simple assignments
+We also check for all other valid statements in a program, "If", "For", etc... and call the corresponding function to deal with that
+If we don't find a valid statement token, we will error
+
+*/
 DataStore Parser::Statement(bool acceptParen) {
 
 	DataStore statementData;
@@ -211,7 +260,16 @@ DataStore Parser::Statement(bool acceptParen) {
 	return statementData;
 }
 
-// Procedure Declaration
+
+/*
+	PROCEDURE DECLARATIONS
+
+This function handles all procedure declarations in the input file program
+It takes in a boolean letting it know if the procedure is intended to be global or not
+Then it calls the Procedure Header function, telling it is it's global or not
+After that it calls the Procedure Body function, then closes the procedures scope
+
+*/
 DataStore Parser::ProcDeclare(bool isGlobal) {
 	DataStore procedureDeclarationData;
 	ProcHead(isGlobal);
@@ -220,7 +278,30 @@ DataStore Parser::ProcDeclare(bool isGlobal) {
 	return procedureDeclarationData;
 }
 
-// Variable Declaration
+
+/*
+	VARIABLE DECLARATIONS
+
+This function handles all variable declarations in the input file program
+It takes in a boolean value that will tell us if the variable is intended to be global or not
+First, it goes and gets the type of the variable and stores that, then it gets the identifier for the variable and stores that
+Then we check for a '[' which will signal that the variable declaration is for an array
+If the variable is an array, we check to see if either bounds are negative, and set them accordingly
+If the '[' is found, but we are missing either bound, or the ':', we will error
+We also do type checking on the array bounds to verify that the array bounds are in fact integer values, if not we error
+If we found '[', we finish with checking for ']', and if we don't find it, we error
+
+After dealing with the possible array handling, we start dealing with adding the variable to the symbol table
+First we check to see if the the variable in in the correct scope currently
+If it is, we check if it's already been assigned, and if it hasn't, we assign everything, otherwise we error
+If the scope we want to put it in is different from the symbol we found from the Identifier function, we check if this variable is to be global or not
+If the variable is not meant to be global, we add it to the local symbol table
+If the variable is supposed to be global, first we check the global symbol table to see if it exists, and if it does, we error
+If the variable is supposed to be global, and we don't find it in that table, we check to see if we have it but haven't assigned it yet
+If it hasn't been assigned, we assign it
+If it has been asssigned globally already, we error
+
+*/
 DataStore Parser::VarDeclare(bool isGlobal) {
 	DataStore variableDeclarationData;
 	bool negBound = false;
@@ -229,7 +310,7 @@ DataStore Parser::VarDeclare(bool isGlobal) {
 
 	Symbol tempSymbol;
 	tempSymbol.isGlobal = isGlobal;
-	DataStore dataToHandle = TypeMark();	// Get the type of the variable
+	DataStore dataToHandle = Type();	// Get the type of the variable
 	if (dataToHandle.success) {
 		tempSymbol.tempSymbolType = dataToHandle.tempType;
 	}
@@ -336,18 +417,19 @@ DataStore Parser::VarDeclare(bool isGlobal) {
 				tempToken = inputScanner.tokenScan();
 			}
 			else {
-				ParsingError tempError("PARSE ERROR, MISSING '[' IN VARIABLE DECLARATION", tempToken.lineNum, tempToken.t_string);
+				ParsingError tempError("PARSE ERROR, MISSING ']' IN VARIABLE DECLARATION", tempToken.lineNum, tempToken.t_string);
 				ResultOfParse.push_back(tempError);
 			}
 		}
 		else {
 			ParsingError tempError("PARSE ERROR, MISSING ':' IN ARRAY DECLARATION", tempToken.lineNum, tempToken.t_string);
 			ResultOfParse.push_back(tempError);
+			tempToken = inputScanner.tokenScan();
 		}
 	}
 
-	// Check symbol global flags
-	if (tempSymbol.isGlobal == returnedSymbol->isGlobal) {
+	// Check scope
+	if (isGlobal == returnedSymbol->isGlobal) {
 
 		// Check is symbol is new, if so, set values
 		if (returnedSymbol->tempSymbolType == UNASSIGNED) {
@@ -357,16 +439,16 @@ DataStore Parser::VarDeclare(bool isGlobal) {
 			returnedSymbol->arrayUpper = tempSymbol.arrayUpper;
 		}
 
-		// Symbol is not new, redeclaration of local variable
+		// Symbol is not new, redeclaration
 		else {
-			ParsingError tempError("PARSE ERROR, REDECLARING LOCAL VARIABLE", tempToken.lineNum, tempToken.t_string);
+			ParsingError tempError("PARSE ERROR, REDECLARING VARIABLE", tempToken.lineNum, tempToken.t_string);
 			ResultOfParse.push_back(tempError);
 		}
 	}
 	else {
 
 		// Check if symbol is not global, if not, add it to the symbol table
-		if (tempSymbol.isGlobal == false) {
+		if (isGlobal == false) {
 			variableDeclarationData.tempToken.t_symbol = symbolTable->addSymbol(tempSymbol.id, tempSymbol, tempSymbol.isGlobal);
 		}
 
@@ -376,7 +458,7 @@ DataStore Parser::VarDeclare(bool isGlobal) {
 
 			// Symbol was not already in global scope, add it
 			if (checkGlobal == nullptr) {
-				variableDeclarationData.tempToken.t_symbol = symbolTable->addSymbol(tempSymbol.id, tempSymbol, tempSymbol.isGlobal);
+				variableDeclarationData.tempToken.t_symbol = symbolTable->addSymbol(tempSymbol.id, tempSymbol, true);
 			}
 
 			// Symbol was in global scope, but new symbol is unassigned, set values
@@ -399,7 +481,14 @@ DataStore Parser::VarDeclare(bool isGlobal) {
 	return variableDeclarationData;
 }
 
-// Procedure Head
+
+/*
+	PROCEDURE HEADER
+
+This function handles the header for all procedures in the input file program
+This is exactly the same implementation and steps as the Program Header function, swapping "program" for procedure
+
+*/
 DataStore Parser::ProcHead(bool isGlobal) {
 	
 	DataStore procedureHeaderData;
@@ -497,7 +586,14 @@ DataStore Parser::ProcHead(bool isGlobal) {
 	return procedureHeaderData;
 }
 
-// Procedure Body
+
+/*
+	PROCEDURE BODY
+
+This function handles the body for all procedures in the input file program
+This is exactly the same implementation and steps as the Program Body function, swapping "program" for procedure
+
+*/
 DataStore Parser::ProcBody() {
 
 	DataStore procedureBodyData;
@@ -554,7 +650,16 @@ DataStore Parser::ProcBody() {
 	return procedureBodyData;
 }
 
-// Parameter List
+
+/*
+	PARAMETER LIST
+
+This function handles getting the list of parameters for a given procedure
+First it calls the Parameter function to process the parameter, and if appropriate, will add that parameter to the vector of parameters for this procedure
+Then it looks for a ',', and if it finds one, we know that there are multiple parameters for this procedure
+If it finds a ',', we get the parameter and recursively call this function, continously appending the new parameters to the end of the vector for the procedure
+
+*/
 DataStore Parser::ParamList() {
 	DataStore parameterListData;
 
@@ -569,13 +674,24 @@ DataStore Parser::ParamList() {
 
 		dataFromParam = ParamList();	// Recursively call this function to continue getting the parameter types
 		if (dataFromParam.success) {
-			parameterListData.procedureParameters.insert(parameterListData.procedureParameters.end(), dataFromParam.procedureParameters.begin(), dataFromParam.procedureParameters.end());
+			for (int i = 0; i < dataFromParam.procedureParameters.size(); i++) {
+				parameterListData.procedureParameters.push_back(dataFromParam.procedureParameters[i]);
+			}
 		}
 	}
 	return parameterListData;
 }
 
-// Parameter
+
+/*
+	PARAMETER
+
+This function handles interpreting the parameter for a procedure
+First we call the Variable Declaration function to handle the parameter value itself
+Next, we check the type on the parameter token against the three outlined by the language specification (In, Out and InOut)
+If we don't find one of these, we error
+
+*/
 DataStore Parser::Param() {
 	DataStore parameterData;
 
@@ -587,19 +703,19 @@ DataStore Parser::Param() {
 
 	// Parameter is IN type
 	if (tempToken.t_type == IN) {
-		parameterData.procedureParameters.push_back({ returnedSymbol, INTYPE });
+		parameterData.procedureParameters.push_back({ returnedSymbol, IN });
 		tempToken = inputScanner.tokenScan();
 	}
 
 	// Parameter is OUT type
 	else if (tempToken.t_type == OUT) {
-		parameterData.procedureParameters.push_back({ returnedSymbol, OUTTYPE });
+		parameterData.procedureParameters.push_back({ returnedSymbol, OUT });
 		tempToken = inputScanner.tokenScan();
 	}
 
 	// Parameter is INOUT type
 	else if (tempToken.t_type == INOUT) {
-		parameterData.procedureParameters.push_back({ returnedSymbol, INOUTTYPE });
+		parameterData.procedureParameters.push_back({ returnedSymbol, INOUT });
 		tempToken = inputScanner.tokenScan();
 	}
 
@@ -611,8 +727,15 @@ DataStore Parser::Param() {
 	return parameterData;
 }
 
-// Type Mark
-DataStore Parser::TypeMark() {
+
+/*
+	TYPE
+
+This function handles setting the appropriate type of a symbol based on the token type and moves on to the next token and returns
+If we don't find any valid type (integer, float, bool, char, or string), we error
+
+*/
+DataStore Parser::Type() {
 
 	DataStore typeData;
 
@@ -654,7 +777,22 @@ DataStore Parser::TypeMark() {
 	return typeData;
 }
 
-// Assignment that handles parentheses
+
+/*
+	ASSIGNMENT (SUPPORTING PARENTHESES)
+
+This function handles assignment statements in the input file program
+First it checks that there is an identifier, and if there is, we call the Identifier function to store that
+Next we look for a '[' signalling that we are accessing an array.
+If we are, we call the Expression function on the contents of the brackets, and then type check them to verify that they are integer values
+If there was no '[', we check for '(', meaning that we are assigning within a loop or some sort or a procedure or the like
+Then we call the Argument List function to get the arguments in the assignment and check for the final ')' and error if we don't find one
+Once we've gotten the arguments, we check that the number of parameters and the number of arguments are the same, if not we error
+If they are, then we check the type on each parameter to each argument
+Lastly, if we didn't find '[' or '(', we are just assigning a simple variable, so we check that there is a ':=' and then call the Assign State function to handle that
+If the input file is missing the ':=', we error, but proceed anyway
+
+*/
 DataStore Parser::ParenAssign() {
 
 	DataStore assignData;
@@ -684,7 +822,7 @@ DataStore Parser::ParenAssign() {
 
 			if (tempToken.t_type == BRACKEND) {
 				tempToken = inputScanner.tokenScan();
-				AssignState(destData.tempToken, destData.tempType);
+				SetAssign(destData.tempToken, destData.tempType);
 			}
 			else {
 				ParsingError tempError("PARSE ERROR, MISSING ']' IN ASSIGNMENT", tempToken.lineNum, tempToken.t_string);
@@ -717,7 +855,7 @@ DataStore Parser::ParenAssign() {
 				for (int i = 0; i < assignData.procedureParameters.size(); i++) {
 
 					// Check that the types of each parameter match with the corresponding argument in the procedure call
-					if (assignData.tempToken.t_symbol->procedureParameters[i].first->tempSymbolType == assignData.args[i]) {
+					if (get<0>(assignData.tempToken.t_symbol->procedureParameters[i])->tempSymbolType == assignData.args[i]) {
 
 					}
 
@@ -745,27 +883,27 @@ DataStore Parser::ParenAssign() {
 		// We are assigning a simple variable
 		else {
 			if (tempToken.t_type == SEMIEQUAL) {
-				AssignState(destData.tempToken, destData.tempType);	// Go into variable assignment function, passing the token and it's type in
-			}
-			else if (!invalidAssign && (tempToken.t_type == EQUALS || tempToken.t_type == COLON)) {
-				invalidAssign = true;
-				tempToken.t_type = SEMIEQUAL;
-
-				ParsingError tempError("PARSE WARNING, ':=' MUST BE USED FOR ASSIGNMENT, THIS IS ONLY FORGIVEN ONCE", tempToken.lineNum, tempToken.t_string);
-				ResultOfParse.push_back(tempError);
-
-				AssignState(destData.tempToken, destData.tempType);	// Go into variable assignment function, passing the token and it's type in
+				SetAssign(destData.tempToken, destData.tempType);	// Go into variable assignment function, passing the token and it's type in
 			}
 			else {
 				ParsingError tempError("PARSE ERROR, MISSING ':=' IN ASSIGNMENT", tempToken.lineNum, tempToken.t_string);
 				ResultOfParse.push_back(tempError);
+
+				SetAssign(destData.tempToken, destData.tempType);	// Go into variable assignment function, passing the token and it's type in
 			}
 		}
 	}
 	return assignData;
 }
 
-// Basic Assign (same as ParenAssign but doesn't look for parentheses)
+
+/*
+	ASSIGNMENT (BASIC)
+
+This function handles assignment statements in the input file program
+This is exactly the same as the Paren Assign function, except that this one doesn't handle procedure assignments
+
+*/
 DataStore Parser::Assign() {
 
 	DataStore assignData;
@@ -793,9 +931,10 @@ DataStore Parser::Assign() {
 				ResultOfParse.push_back(tempError);
 			}
 
+			// Check for ending bracket ']'
 			if (tempToken.t_type == BRACKEND) {
 				tempToken = inputScanner.tokenScan();
-				AssignState(destData.tempToken, destData.tempType);
+				SetAssign(destData.tempToken, destData.tempType);
 			}
 			else {
 				ParsingError tempError("PARSE ERROR, MISSING ']' IN ASSIGNMENT", tempToken.lineNum, tempToken.t_string);
@@ -806,41 +945,40 @@ DataStore Parser::Assign() {
 		// We are assigning a simple variable
 		else {
 			if (tempToken.t_type == SEMIEQUAL) {
-				AssignState(destData.tempToken, destData.tempType);	// Go into variable assignment function, passing the token and it's type in
-			}
-			else if (!invalidAssign && (tempToken.t_type == EQUALS || tempToken.t_type == COLON)) {
-				invalidAssign = true;
-				tempToken.t_type = SEMIEQUAL;
-
-				ParsingError tempError("PARSE WARNING, ':=' MUST BE USED FOR ASSIGNMENT, THIS IS ONLY FORGIVEN ONCE", tempToken.lineNum, tempToken.t_string);
-				ResultOfParse.push_back(tempError);
-
-				AssignState(destData.tempToken, destData.tempType);	// Go into variable assignment function, passing the token and it's type in
+				SetAssign(destData.tempToken, destData.tempType);	// Go into variable assignment function, passing the token and it's type in
 			}
 			else {
 				ParsingError tempError("PARSE ERROR, MISSING ':=' IN ASSIGNMENT", tempToken.lineNum, tempToken.t_string);
 				ResultOfParse.push_back(tempError);
+
+				SetAssign(destData.tempToken, destData.tempType);	// Go into variable assignment function, passing the token and it's type in
 			}
 		}
 	}
 	return assignData;
 }
 
-// Statement Assignment
-DataStore Parser::AssignState(token destTok, SYMBOL_TYPES destType) {
+
+/*
+	ASSIGN STATE
+
+This function handles assigning values back and forth, and primarily type checking assignments
+First we check that the user has intended to assign the two values
+Then we call the Expression function to get the assignment value on the right of the assignment operation
+Then we type check the left and right types of the assignment, and if they are not compatible via the program language specification, we error
+
+*/
+DataStore Parser::SetAssign(token destTok, SYMBOL_TYPES destType) {
 
 	DataStore assignStateData;
 	DataStore dataToHandle;
 	string assignmentString;
 	assignmentString += destTok.t_string + " := ";
 
-	if (tempToken.t_type == SEMIEQUAL || (!invalidAssign && (tempToken.t_type == EQUALS || tempToken.t_type == COLON))) {
+	if (tempToken.t_type == SEMIEQUAL || (tempToken.t_type == EQUALS || tempToken.t_type == COLON)) {
 
 		if (tempToken.t_type != SEMIEQUAL) {
-			invalidAssign = true;
-			tempToken.t_type = SEMIEQUAL;
-
-			ParsingError tempError("PARSE WARNING, ':=' MUST BE USED FOR ASSIGNMENT, THIS IS ONLY FORGIVEN ONCE", tempToken.lineNum, tempToken.t_string);
+			ParsingError tempError("PARSE ERROR, ':=' MUST BE USED FOR ASSIGNMENT", tempToken.lineNum, tempToken.t_string);
 			ResultOfParse.push_back(tempError);
 		}
 
@@ -853,7 +991,6 @@ DataStore Parser::AssignState(token destTok, SYMBOL_TYPES destType) {
 
 		// If the types of both assignment variables are the same, no conversion required, simple assignment
 		if (destType == dataToHandle.tempType) {
-
 		}
 
 		// Second type is either a float or a boolean and must be converted to an integer for assignment
@@ -871,6 +1008,10 @@ DataStore Parser::AssignState(token destTok, SYMBOL_TYPES destType) {
 
 		}
 
+		else if ((destType == SYMINTEGER && dataToHandle.tempType == SYMCHAR) || (destType == SYMCHAR && dataToHandle.tempType == SYMINTEGER)) {
+
+		}
+
 		// The types on either side of the assignment are invalid to be assigned to one another per language specification
 		else {
 			assignmentString += dataToHandle.tempToken.t_string;
@@ -885,7 +1026,14 @@ DataStore Parser::AssignState(token destTok, SYMBOL_TYPES destType) {
 	return assignStateData;
 }
 
-// Argument List
+
+/*
+	ARGUMENT LIST
+
+This function handles getting the list of arguments for a given procedure call
+This is exactly the same as the Parameter List function, except this one gets the argument expressions
+
+*/
 DataStore Parser::ArgumentList() {
 
 	DataStore argumentListData;
@@ -899,13 +1047,30 @@ DataStore Parser::ArgumentList() {
 		tempToken = inputScanner.tokenScan();
 		dataToHandle = ArgumentList();	// Recursively call this function to continue getting the arguments
 		if (dataToHandle.success) {
-			argumentListData.args.insert(argumentListData.args.end(), dataToHandle.args.begin(), dataToHandle.args.end());
+			for (int i = 0; i < dataToHandle.args.size(); i++) {
+				argumentListData.args.push_back(dataToHandle.args[i]);
+			}
 		}
 	}
 	return argumentListData;
 }
 
-// If
+
+/*
+	IF STATEMENT
+
+This function handles the if statements found in the input program file
+First we check for 'if', and then check for '(', erroring if we don't find either
+Then we check to see if there is an expression conditional inside the if statement, if there isn't we check for the ')' and error if we don't find it
+If there is an expression within the '()' of the if statement, we type check that that statement can resolve to a boolean value per the language specification
+After that, we look for 'then' and error if we don't find it, per the language specification
+Then we get the first statement in the conditional, checking that there is a ';' flanking it
+Now we check so see if there are any more statements inside the if conditional and execute the Statement function for each one we find
+Next we check for 'else', which may or may not be there
+If it isn't there, we check for 'end if' per the language specification
+If there is an 'else' we check for one or more statements within the 'else' just as before with the main if conditional
+
+*/
 DataStore Parser::If() {
 
 	DataStore ifData;
@@ -916,8 +1081,7 @@ DataStore Parser::If() {
 		if (tempToken.t_type == PARENBEGIN) {
 			tempToken = inputScanner.tokenScan();
 
-			DataStore
-				dataToHandle = Expr();	// Get the expression within the "if" conditional
+			DataStore dataToHandle = Expr();	// Get the expression within the "if" conditional
 			if (dataToHandle.success) {
 				ifData.tempToken = dataToHandle.tempToken;
 				ifData.tempType = dataToHandle.tempType;
@@ -1033,7 +1197,17 @@ DataStore Parser::If() {
 	return ifData;
 }
 
-// Loop
+
+/*
+	LOOP STATEMENT
+
+This function handles the for loops found in the input file program
+First we check for 'for', and then for a '(', after which we call the Assign function on the iterator of the loop
+Next we type check that the loops iterator resolves to a boolean or a integer per the language specification
+After the ')', we check for any statements that are made in the loop, calling the Statement function for each
+Finally, we look for 'end for' per the language specification
+
+*/
 DataStore Parser::Loop() {
 
 	DataStore loopData;
@@ -1092,6 +1266,7 @@ DataStore Parser::Loop() {
 					else {
 						ParsingError tempError("PARSE ERROR, MISSING FOR IN END FOR STATEMENT", tempToken.lineNum, tempToken.t_string);
 						ResultOfParse.push_back(tempError);
+						tempToken = inputScanner.tokenScan();
 					}
 				}
 				else {
@@ -1116,7 +1291,14 @@ DataStore Parser::Loop() {
 	return loopData;
 }
 
-// Return
+
+/*
+	RETURN STATEMENT
+
+This function handles any return statements made in the input file program
+We check for the 'return' token, and continue on, but if we don't find it, we give an error
+
+*/
 DataStore Parser::Return() {
 
 	DataStore returnData;
@@ -1142,8 +1324,12 @@ DataStore Parser::Return() {
 
 
 
+/*
+	IDENTIFIER
 
-// Identifier
+This function handles setting the identifier on a given symbol and moving to the next token after
+
+*/
 DataStore Parser::Ident() {
 	DataStore identifierData;
 	identifierData.tempToken = tempToken;
@@ -1152,7 +1338,15 @@ DataStore Parser::Ident() {
 	return identifierData;
 }
 
-// Expression
+
+/*
+	EXPRESSION
+
+This function handles checking for 'not', as well as calling the Arithmetic and Expression Prime functions when appropriate
+If we do find 'not', we type check that the following token resolves to an integer or boolean per the language specification
+It also sets types and token members
+
+*/
 DataStore Parser::Expr() {
 
 	DataStore expressionData;
@@ -1191,7 +1385,16 @@ DataStore Parser::Expr() {
 	return expressionData;
 }
 
-// Expression Prime
+
+/*
+	EXPRESSION PRIME
+	
+This function handles checking for 'and' and 'or' operators in the input file program
+It will then call the Arithmetic function and recursively call itself and sets the types and token members from those calls
+Finally, it checks the types of both sides of the 'and' or 'or' to ensure that they are comparisons of bool-to-bool or integer-to-integer per the language specification
+If they do not align to this specification, we error
+
+*/
 DataStore Parser::ExprPrime(token prevFacTok, SYMBOL_TYPES prevFacType) {
 
 	DataStore expressionData;
@@ -1229,7 +1432,14 @@ DataStore Parser::ExprPrime(token prevFacTok, SYMBOL_TYPES prevFacType) {
 	return expressionData;
 }
 
-// Arithmetic
+
+/*
+	ARITHMETIC
+
+This function handles calling to the Relation function and the Arithmetic Prime function when appropriate
+It also sets types and token members
+
+*/
 DataStore Parser::Arith() {
 	DataStore arithmeticData;
 	DataStore dataToHandle = Relat();
@@ -1248,7 +1458,15 @@ DataStore Parser::Arith() {
 	return arithmeticData;
 }
 
-// Arithmetic Prime
+
+/*
+	ARITHMETIC PRIME
+
+This function handles checking for addition and subtraction operators in the input file program
+It will then call the Relation function and recursively call itself and sets the types and token members from those calls
+Finally, it checks that the types of both sides of the addition or subtraction operator align per the language specification, otherwise we error
+
+*/
 DataStore Parser::ArithPrime(token prevFacTok, SYMBOL_TYPES prevFacType) {
 
 	DataStore arithmeticData;
@@ -1295,7 +1513,14 @@ DataStore Parser::ArithPrime(token prevFacTok, SYMBOL_TYPES prevFacType) {
 	return arithmeticData;
 }
 
-// Relation
+
+/*
+	RELATION
+
+This function handles calling to the Term function and the Relation Prime function when appropriate
+It also sets types and token members
+
+*/
 DataStore Parser::Relat() {
 	DataStore relationData;
 	DataStore dataToHandle = Term();
@@ -1314,7 +1539,15 @@ DataStore Parser::Relat() {
 	return relationData;
 }
 
-// Relation Prime
+
+/*
+	RELATION PRIME
+
+This function handles checking for any relational operators (==, <, !=, etc...) in the input file program
+It will then call the Term function and recursively call itself and sets the types and token members from those calls
+Finally, it checks that the types of both sides of the relational operator align per the language specification, otherwise we error
+
+*/
 DataStore Parser::RelatPrime(token prevFacTok, SYMBOL_TYPES prevFacType) {
 	DataStore relationData;
 	DataStore dataToHandle;
@@ -1366,7 +1599,14 @@ DataStore Parser::RelatPrime(token prevFacTok, SYMBOL_TYPES prevFacType) {
 	return relationData;
 }
 
-// Term
+
+/*
+	TERM
+	
+This function handles calling the Factor function and the Term Prime function when appropriate
+It also sets types and token members
+
+*/
 DataStore Parser::Term() {
 	DataStore termData;
 	DataStore dataToHandle = Factor();
@@ -1385,7 +1625,15 @@ DataStore Parser::Term() {
 	return termData;
 }
 
-// Term Prime
+
+/*
+	TERM PRIME
+
+This function handles checking for multiplication and division operators in the input file program
+It will then call the Factor function and recursively call itself and set the types and token members from those calls
+Finally, it checks that the types of both sides of either the multiplication or division operator align per the language specification, otherwise we error
+
+*/
 DataStore Parser::TermPrime(token prevFacTok, SYMBOL_TYPES prevFacType) {
 	DataStore termData;
 	DataStore dataToHandle;
@@ -1429,7 +1677,18 @@ DataStore Parser::TermPrime(token prevFacTok, SYMBOL_TYPES prevFacType) {
 	return termData;
 }
 
-// Factor
+
+/*
+	FACTOR
+
+This function handles the low-level parse tree operations for the input file program
+This includes calling expression if we find a '(' so that it can interpret the inside of some statement or call, etc...,
+Checking for '-' as a negative sign, and then checking for either an identifier or integer/float after it so that it can set the types,
+Checking for an identifier, and setting it's type and token members,
+Checking for a basic integer or float value and setting the types appropriately,
+Checking for a basic string, character, or true/false, and setting those types and token members appropriately
+
+*/
 DataStore Parser::Factor() {
 	DataStore factorData;
 	DataStore dataToHandle;
@@ -1525,7 +1784,15 @@ DataStore Parser::Factor() {
 	}
 }
 
-// Name
+
+/*
+	NAME
+
+This function handles calling the Identifer function and setting the type and token members from that
+It also checks for brackets, signalling that we are using an array accessor, which it then calls back to the Expression function to store
+If we do find brackets, we check that the expression within them resolves to an integer per the language specification
+
+*/
 DataStore Parser::Name() {
 	DataStore nameData;
 	DataStore dataToHandle = Ident();
@@ -1551,11 +1818,17 @@ DataStore Parser::Name() {
 			ParsingError tempError("PARSE ERROR, MISSING ']' IN NAME", tempToken.lineNum, tempToken.t_string);
 			ResultOfParse.push_back(tempError);
 		}
-	}  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	}
 	return nameData;
 }
 
-// Number
+
+/*
+	NUMBER
+
+This function handles setting the token members for a number value
+
+*/
 DataStore Parser::Number() {
 	DataStore numberData;
 	numberData.tempToken = tempToken;

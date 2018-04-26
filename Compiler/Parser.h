@@ -13,25 +13,30 @@ An instance of Scanner, a temporary token for parsing, as well as declarations f
 
 #include <vector>
 
+
+// Structure for returning data up out of the parsing tree that includes a success flag, the token, the symbol type, the potential parameters, and the potential arguments
 struct DataStore {
 	bool success = true;
 	token tempToken;
 	SYMBOL_TYPES tempType;
-	vector<pair<Symbol*, PARAM_TYPES>> procedureParameters = {};
-	vector<SYMBOL_TYPES> args = {};
+	vector<tuple<Symbol*, TYPES>> procedureParameters;
+	vector<SYMBOL_TYPES> args;
 };
 
+
+// Parser class
 class Parser {
 public:
-	Parser(const char* filePath, SymTable& returnedSymbolTable);
-	void beginParsingFile();
+	Parser(const char* filePath, SymTable& returnedSymbolTable);	// Constructor
 
-	Scanner inputScanner;
+	void beginParsingFile();	// Function to start the parse
+
+	Scanner inputScanner;	// Instance of Scanner
 
 private:
-	token tempToken;
-	SymTable* symbolTable;
-	CodeGen codeGenerator;
+	token tempToken;		// Instance of a token structure
+	SymTable* symbolTable;	// Instance of a symbol table
+	CodeGen codeGenerator;	// Instance of a code generator
 
 	DataStore Program();
 	DataStore ProgramHead();
@@ -44,13 +49,13 @@ private:
 	DataStore ProcBody();
 	DataStore ParamList();
 	DataStore Param();
-	DataStore TypeMark();
+	DataStore Type();
 	DataStore Assign();
 	DataStore ParenAssign();
 	DataStore If();
 	DataStore Loop();
 	DataStore Return();
-	DataStore AssignState(token destTok, SYMBOL_TYPES destType);
+	DataStore SetAssign(token destTok, SYMBOL_TYPES destType);
 	DataStore ArgumentList();
 
 	DataStore Expr();

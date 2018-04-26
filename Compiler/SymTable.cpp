@@ -4,14 +4,11 @@
 
 using namespace std;
 
+
+// Constructor to initialize the symbol table
+// Adds all of the built in functions and reserve words as symbols to the global table
 SymTable::SymTable() {
-
-
-
 	Scopes.reserve(100);
-
-
-
 	Symbol reserveSymbol;
 	reserveSymbol.isGlobal = true;
 
@@ -113,7 +110,7 @@ SymTable::SymTable() {
 	OpenScope();
 	varAdd.tempSymbolType = SYMINTEGER;
 	retVarSymbol = addSymbol(varAdd.id, varAdd, false);
-	retSymbol->procedureParameters.push_back(pair<Symbol*, PARAM_TYPES>(retVarSymbol, INTYPE));
+	retSymbol->procedureParameters.push_back(pair<Symbol*, TYPES>(retVarSymbol, IN));
 	CloseScope();
 
 	reserveSymbol.id = "putfloat";
@@ -121,7 +118,7 @@ SymTable::SymTable() {
 	OpenScope();
 	varAdd.tempSymbolType = SYMFLOAT;
 	retVarSymbol = addSymbol(varAdd.id, varAdd, false);
-	retSymbol->procedureParameters.push_back(pair<Symbol*, PARAM_TYPES>(retVarSymbol, INTYPE));
+	retSymbol->procedureParameters.push_back(pair<Symbol*, TYPES>(retVarSymbol, IN));
 	CloseScope();
 
 	reserveSymbol.id = "putchar";
@@ -129,7 +126,7 @@ SymTable::SymTable() {
 	OpenScope();
 	varAdd.tempSymbolType = SYMCHAR;
 	retVarSymbol = addSymbol(varAdd.id, varAdd, false);
-	retSymbol->procedureParameters.push_back(pair<Symbol*, PARAM_TYPES>(retVarSymbol, INTYPE));
+	retSymbol->procedureParameters.push_back(pair<Symbol*, TYPES>(retVarSymbol, IN));
 	CloseScope();
 
 	reserveSymbol.id = "putbool";
@@ -137,7 +134,7 @@ SymTable::SymTable() {
 	OpenScope();
 	varAdd.tempSymbolType = SYMBOOL;
 	retVarSymbol = addSymbol(varAdd.id, varAdd, false);
-	retSymbol->procedureParameters.push_back(pair<Symbol*, PARAM_TYPES>(retVarSymbol, INTYPE));
+	retSymbol->procedureParameters.push_back(pair<Symbol*, TYPES>(retVarSymbol, IN));
 	CloseScope();
 
 	reserveSymbol.id = "putstring";
@@ -145,7 +142,7 @@ SymTable::SymTable() {
 	OpenScope();
 	varAdd.tempSymbolType = SYMSTRING;
 	retVarSymbol = addSymbol(varAdd.id, varAdd, false);
-	retSymbol->procedureParameters.push_back(pair<Symbol*, PARAM_TYPES>(retVarSymbol, INTYPE));
+	retSymbol->procedureParameters.push_back(pair<Symbol*, TYPES>(retVarSymbol, IN));
 	CloseScope();
 
 	reserveSymbol.id = "getinteger";
@@ -153,7 +150,7 @@ SymTable::SymTable() {
 	OpenScope();
 	varAdd.tempSymbolType = SYMINTEGER;
 	retVarSymbol = addSymbol(varAdd.id, varAdd, false);
-	retSymbol->procedureParameters.push_back(pair<Symbol*, PARAM_TYPES>(retVarSymbol, OUTTYPE));
+	retSymbol->procedureParameters.push_back(pair<Symbol*, TYPES>(retVarSymbol, OUT));
 	CloseScope();
 
 	reserveSymbol.id = "getfloat";
@@ -161,7 +158,7 @@ SymTable::SymTable() {
 	OpenScope();
 	varAdd.tempSymbolType = SYMFLOAT;
 	retVarSymbol = addSymbol(varAdd.id, varAdd, false);
-	retSymbol->procedureParameters.push_back(pair<Symbol*, PARAM_TYPES>(retVarSymbol, OUTTYPE));
+	retSymbol->procedureParameters.push_back(pair<Symbol*, TYPES>(retVarSymbol, OUT));
 	CloseScope();
 
 	reserveSymbol.id = "getchar";
@@ -169,7 +166,7 @@ SymTable::SymTable() {
 	OpenScope();
 	varAdd.tempSymbolType = SYMCHAR;
 	retVarSymbol = addSymbol(varAdd.id, varAdd, false);
-	retSymbol->procedureParameters.push_back(pair<Symbol*, PARAM_TYPES>(retVarSymbol, OUTTYPE));
+	retSymbol->procedureParameters.push_back(pair<Symbol*, TYPES>(retVarSymbol, OUT));
 	CloseScope();
 
 	reserveSymbol.id = "getbool";
@@ -177,7 +174,7 @@ SymTable::SymTable() {
 	OpenScope();
 	varAdd.tempSymbolType = SYMBOOL;
 	retVarSymbol = addSymbol(varAdd.id, varAdd, false);
-	retSymbol->procedureParameters.push_back(pair<Symbol*, PARAM_TYPES>(retVarSymbol, OUTTYPE));
+	retSymbol->procedureParameters.push_back(pair<Symbol*, TYPES>(retVarSymbol, OUT));
 	CloseScope();
 
 	reserveSymbol.id = "getstring";
@@ -185,7 +182,7 @@ SymTable::SymTable() {
 	OpenScope();
 	varAdd.tempSymbolType = SYMSTRING;
 	retVarSymbol = addSymbol(varAdd.id, varAdd, false);
-	retSymbol->procedureParameters.push_back(pair<Symbol*, PARAM_TYPES>(retVarSymbol, OUTTYPE));
+	retSymbol->procedureParameters.push_back(pair<Symbol*, TYPES>(retVarSymbol, OUT));
 	CloseScope();
 
 
@@ -205,10 +202,13 @@ SymTable::SymTable() {
 	addSymbol(reserveSymbol.id, reserveSymbol, true);
 }
 
+
+// Function to get a symbol given whether or not it's global and it's ID
 Symbol* SymTable::getSymbol(string id, bool onlyGlobal) {
 
 	Symbol* symbolOut = nullptr;
 
+	// If we are not searching in global, and we have opened a scope, look for the symbol in there
 	if (!Scopes.empty() && onlyGlobal == false) {
 		auto iter = Scopes[Scopes.size() - 1].find(id);
 		if (iter != Scopes[Scopes.size() - 1].end()) {
@@ -216,54 +216,46 @@ Symbol* SymTable::getSymbol(string id, bool onlyGlobal) {
 		}
 	}
 
+	// We are searching for a global symbol, check the global table for it
 	if (symbolOut == nullptr) {
 		auto iter = GlobalTable.find(id);
 		if (iter != GlobalTable.end()) {
 			symbolOut = &(iter->second);
 		}
 	}
-	if (id == "print_string") {
-		return symbolOut;
-	}
 	return symbolOut;
 }
 
 
+// Function to add a symbol given the symbol, it's ID, and whether or not it's global
 Symbol* SymTable::addSymbol(string id, Symbol symbolIn, bool isGlobal) {
 
+	// If the symbol is supposed to be global, insert it there
 	if (isGlobal) {
 		GlobalTable.insert({ id, symbolIn });
 
 		auto iter = GlobalTable.find(id);
-		if (iter != GlobalTable.end()) {
-			return &(iter->second);
-		}
-		else {
-			SymbolError tempError("ERROR, UNABLE TO ADD SYMBOL TO GLOBAL TABLE", symbolIn.id);
-			ResultOfSymbol.push_back(tempError);
-		}
+		return &(iter->second);
 	}
+
+	// Symbol is not meant to be global
 	else {
+
+		// Check if we've opened a scope, if we have, add the symbol to the newest scope
 		if (!Scopes.empty()) {
 			Scopes[Scopes.size() - 1].insert({ id, symbolIn });
 
 			auto iter = Scopes[Scopes.size() - 1].find(id);
-			if (iter != Scopes[Scopes.size() - 1].end()) {
-				return &(iter->second);
-			}
-			else {
-				SymbolError tempError("ERROR, UNABLE TO ADD SYMBOL TO LOCAL SCOPE", symbolIn.id);
-				ResultOfSymbol.push_back(tempError);
-			}
+			return &(iter->second);
 		}
+
+		// We've not entered a procedure yet, add the symbol to the global table instead
 		else {
 			symbolIn.isGlobal = true;
 			GlobalTable.insert({ id, symbolIn });
 
 			auto iter = GlobalTable.find(id);
-			if (iter != GlobalTable.end()) {
-				return &(iter->second);
-			}
+			return &(iter->second);
 
 			SymbolError tempError("WARNING, ASSUMED VALUE WAS MEANT TO BE ADDED TO GLOBAL", symbolIn.id);
 			ResultOfSymbol.push_back(tempError);
@@ -272,10 +264,14 @@ Symbol* SymTable::addSymbol(string id, Symbol symbolIn, bool isGlobal) {
 	return nullptr;
 }
 
+
+// Function to open a new scope
 void SymTable::OpenScope() {
 	Scopes.push_back(HashTable());
 }
 
+
+// Function to close the current scope
 void SymTable::CloseScope() {
 	Scopes.pop_back();
 }

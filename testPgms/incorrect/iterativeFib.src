@@ -5,7 +5,7 @@ integer i;
 integer max;
 
 procedure Fib(integer val in, integer ret out)
-	float tmp[0:]; // Mising second number line 8
+	float tmp[0:]; 											// Mising upper bound line 8
 	integer loopVal;
 
 	begin
@@ -16,7 +16,7 @@ procedure Fib(integer val in, integer ret out)
 	for(loopVal := -1; loopVal < val)
 		ret := tmp[0] + tmp[1];
 		tmp[0] := tmp[1];
-		tmp[1] = ret; // Missing ':' in ':=' line 19
+		tmp[1] = ret; 										// Missing ':' in ':=' line 19
 		loopVal := loopVal + 1;
 	end for;
 

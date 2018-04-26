@@ -13,7 +13,8 @@ As well as the base token structure that contains the elements that make up a to
 
 using namespace std;
 
-// Instruction types, etc...
+
+// ENUM of all possible token types, including reserve words, built-in functions, etc...
 enum TYPES {
 	PROGRAM,
 	BEGIN, END,
@@ -45,10 +46,8 @@ enum TYPES {
 	PUTBOOL, PUTINTEGER, PUTFLOAT, PUTSTRING, PUTCHAR
 };
 
-enum PARAM_TYPES {
-	INTYPE, OUTTYPE, INOUTTYPE
-};
 
+// ENUM for all possible symbol types
 enum SYMBOL_TYPES {
 	UNASSIGNED,
 	SYMINTEGER,
@@ -60,6 +59,8 @@ enum SYMBOL_TYPES {
 	ARRAY
 };
 
+
+// Structure for each symbol, including it's token type (always identifier), it's symbol type, array information, id, global flag, and potential parameters if it's a procedure
 struct Symbol {
 	TYPES tempTokenType = IDENTIFIER;
 	SYMBOL_TYPES tempSymbolType = UNASSIGNED;
@@ -68,10 +69,10 @@ struct Symbol {
 	int arrayLower;
 	string id;
 	bool isGlobal;
-	vector<pair<Symbol*, PARAM_TYPES>> procedureParameters;
+	vector<tuple<Symbol*, TYPES>> procedureParameters;
 };
 
-// Structure to determine types in a token
+// Structure for each token, including a token TYPE enum, a Symbol structure, and int/float/string/char/bool values as well as a line number for the token
 struct token {
 
 	TYPES t_type;

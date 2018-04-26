@@ -14,7 +14,17 @@ This cpp file contains the definitions for Scanner class functions, like initial
 int currentLineNumber = 1;	// Keep track of the line number we're at in the input file
 int commentDepth = 0;		// Keep track of potential nested comments
 
-// Function to systematically scan characters to create a final token
+
+/*
+	TokenScan
+
+This function will use the input file stream and 'getc' to scan in a character from a input file
+It will then compare that character to all possible tokens for the language specification
+When it finds the token that it corresponds to, it will set the type, string/char and the line number for that token
+If it finds a character that doesn't correspond to a token in the language specification, it will set the type to INVALID
+This function will return the assembled token when complete
+
+*/
 token Scanner::tokenScan() {
 
 	token tempToken; // Create temporary token for scanning
@@ -430,7 +440,7 @@ token Scanner::tokenScan() {
 			// If we have somehow finished the while loop, but comment depth has some value, the token is invalid
 			if (commentDepth > 0) {
 				tempToken.t_type = INVALID;
-				ScannerError tempError("LEXER ERROR, UNEVEN BLOCK COMMENTS", blockCommentStart, "");
+				ScannerError tempError("LEXER ERROR, UNEVEN BLOCK COMMENTS (THIS MAY CAUSE FALSE ERRORS IN THE PARSING STAGE)", blockCommentStart, "");
 				ResultOfScan.push_back(tempError);
 			}
 
@@ -475,6 +485,8 @@ void Scanner::init(const char* filePath, SymTable& returnedSymbolTable) {
 		ScannerError tempError("LEXER ERROR, INPUT FILE CANNOT BE READ", -1, "");
 		ResultOfScan.push_back(tempError);
 	}
+
+	currentLineNumber = 1; // Reset the line number each call
 
 	symbolTable = &returnedSymbolTable;
 }

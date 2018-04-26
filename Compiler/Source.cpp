@@ -25,7 +25,7 @@ vector<SymbolError> ResultOfSymbol = {};
 
 // Set up vectors for program filenames
 vector<string> correctPrgms = { "iterativeFib", "logicals", "math", "multipleProcs", "recursiveFib", "source", "test_heap", "test_program_array", "test_program_minimal",  "test1", "test1b", "test2", "vectorOps" };
-vector<string> incorrectPrgms = { "invalidChars", "badSource", "iterativeFib", "logical", "recursiveFib", "vectorOps", "assignBoolAndChar", "assignFloatToInt", "test1",  "test2", "test3" };
+vector<string> incorrectPrgms = { "invalidChars", "badSource", "iterativeFib", "logical", "vectorOps", "assignBoolAndChar", "test1",  "test2", "test3" };
 
 // Set up strings for relative filepaths for programs
 string relCorrectPath = "..//testPgms//correct//";
@@ -147,12 +147,12 @@ int main(int argc, char *argv[]) {
 	int mainMenuSelection;
 	int correctMenuSelection;
 	int incorrectMenuSelection;
-	bool exit = false;
+	bool quit = false;
 	bool goBack = false;
 	string tempPath = "";
 	string fileString = "";
 
-	while (!exit) {
+	while (!quit) {
 		goBack = false;
 		mainMenu();
 		cin >> mainMenuSelection;
@@ -220,7 +220,7 @@ int main(int argc, char *argv[]) {
 
 
 				case 4:
-					exit = true;
+					quit = true;
 					break;
 
 				default:
@@ -230,6 +230,7 @@ int main(int argc, char *argv[]) {
 		}
 
 	}
+	return 0;
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// IF YOU WANT TO OVERRIDE THE MAIN MENU OPTIONS AND DIRECTLY HARD-CODE IN A FILEPATH OF SOURCE TO READ, UNCOMMENT BELOW AND ENSURE THE FILEPATH IS CORRECT // 

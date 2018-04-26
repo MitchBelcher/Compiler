@@ -6,8 +6,8 @@ integer myArray[7:15];
 
 begin
 
-i := 100
-c := 'ABCD';
+i := 100							// missing semicolon
+c := 'ABCD';						// invalid character definition
 
 if(i > 100) then
 //do something#
@@ -16,7 +16,7 @@ end if;
 
 /*Single #Line Block Comments*/
 
-/*
+/*									// uneven block comments
 /*
 Multiline Block Comments*/
 
